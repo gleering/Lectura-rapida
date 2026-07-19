@@ -83,13 +83,14 @@ function getDb() {
 
 export async function saveBook(
   meta: BookMeta,
-  words: string[]
+  words: string[],
+  paraStarts?: number[]
 ): Promise<void> {
   const db = await getDb();
   const tx = db.transaction(["books", "content"], "readwrite");
   await Promise.all([
     tx.objectStore("books").put(meta),
-    tx.objectStore("content").put({ id: meta.id, words }),
+    tx.objectStore("content").put({ id: meta.id, words, paraStarts }),
     tx.done,
   ]);
 }

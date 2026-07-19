@@ -11,6 +11,12 @@ import {
   BookOpenCheck,
 } from "lucide-react";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useWakeLock } from "@/hooks/useWakeLock";
+import {
+  buildSegments,
+  normalizeParagraphStarts,
+  segmentIndexFor,
+} from "@/lib/textStructure";
 import { MethodSelector } from "./MethodSelector";
 import { FinishedDialog } from "./FinishedDialog";
 import { SummaryOverlay } from "./SummaryOverlay";
@@ -22,67 +28,129 @@ import { recordSession } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import type { BookMeta, ReadingMethod } from "@/types";
 
-/** Palabras por página. ~un párrafo-página cómodo, como un libro de bolsillo. */
-const PAGE_WORDS = 230;
+/** Tamaño objetivo de página (palabras). Como un libro de bolsillo. */
+const PAGE_TARGET = 230;
 
 interface PageReaderProps {
   meta: BookMeta;
   words: string[];
+  paraStarts?: number[];
   onMethod: (m: ReadingMethod) => void;
+  /** Reporta la posición viva al contenedor (para cambiar de método sin saltos). */
+  onProgress?: (index: number) => void;
 }
 
 /**
  * Modo Página (escalón 3, la graduación): el libro tal cual, paginado, a tu
- * propio ritmo — sin temporizador ni palabras que huyen. Es leer como en un
- * libro real, con el andamiaje mínimo (opcional: anclaje bionic de fijación).
+ * propio ritmo — sin temporizador ni palabras que huyen.
  *
- * Persiste progreso, tiempo y palabras leídas igual que los demás modos, para
- * que las estadísticas y la resistencia lectora sigan creciendo.
+ * Mejoras de esta versión:
+ * - Las páginas terminan siempre en fin de oración (y de párrafo cuando hay
+ *   uno cerca) — nunca cortan una idea a la mitad.
+ * - Párrafos reales, con sangría, como un libro impreso (detectados al parsear
+ *   el PDF; los libros viejos usan párrafos aproximados por oraciones).
+ * - La reanudación vuelve a la MISMA página (antes retomaba una adelante).
+ * - Solo cuentan como leídas las páginas que realmente pasaste, y el modo
+ *   autopaso ya no registra la velocidad RSVP en las estadísticas.
  */
-export function PageReader({ meta, words, onMethod }: PageReaderProps) {
+export function PageReader({
+  meta,
+  words,
+  paraStarts,
+  onMethod,
+  onProgress,
+}: PageReaderProps) {
   const router = useRouter();
   const { settings, update } = useSettingsStore();
 
-  const totalPages = Math.max(1, Math.ceil(words.length / PAGE_WORDS));
+  // Párrafos (reales o aproximados) y páginas alineadas a oración/párrafo.
+  const paragraphs = useMemo(
+    () => normalizeParagraphStarts(words, paraStarts),
+    [words, paraStarts]
+  );
+  const pageStarts = useMemo(
+    () =>
+      buildSegments(words, PAGE_TARGET, {
+        min: 120,
+        max: 330,
+        breakpoints: paragraphs,
+      }),
+    [words, paragraphs]
+  );
+  const totalPages = pageStarts.length;
+
   const [page, setPage] = useState(() =>
-    Math.min(totalPages - 1, Math.floor(meta.progressIndex / PAGE_WORDS))
+    segmentIndexFor(pageStarts, Math.min(meta.progressIndex, words.length - 1))
   );
   const [finished, setFinished] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const pageWords = useMemo(
-    () => words.slice(page * PAGE_WORDS, (page + 1) * PAGE_WORDS),
-    [words, page]
-  );
+  // Nueva página → arrancar desde arriba.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [page]);
 
-  // --- Persistencia de progreso / tiempo / palabras (autopaso) ---
+  // Posición viva para el contenedor (cambio de método sin perder el lugar).
+  useEffect(() => {
+    onProgress?.(pageStarts[page] ?? 0);
+  }, [page, pageStarts, onProgress]);
+
+  // Mientras el libro está abierto, la pantalla no se apaga.
+  useWakeLock(!finished);
+
+  const pageStart = pageStarts[page] ?? 0;
+  const pageEnd = pageStarts[page + 1] ?? words.length; // exclusivo
+
+  // Párrafos contenidos en la página actual.
+  const pageParagraphs = useMemo(() => {
+    const out: { start: number; text: string[] }[] = [];
+    let segStart = pageStart;
+    for (const ps of paragraphs) {
+      if (ps <= pageStart) continue;
+      if (ps >= pageEnd) break;
+      out.push({ start: segStart, text: words.slice(segStart, ps) });
+      segStart = ps;
+    }
+    out.push({ start: segStart, text: words.slice(segStart, pageEnd) });
+    return out;
+  }, [words, paragraphs, pageStart, pageEnd]);
+
+  // --- Persistencia de progreso / tiempo / palabras ---
+  // completedThrough: fin (exclusivo) de la última página realmente PASADA.
+  // progressIndex guardado: inicio de la página actual → reanudar vuelve acá.
   const enteredAt = useRef(performance.now());
   const mountTime = useRef(0);
   const pendingTime = useRef(0);
-  const lastFlushIndex = useRef(meta.progressIndex);
-  const maxIndex = useRef(meta.progressIndex);
-
-  const progressThrough = useCallback(
-    (p: number) => Math.min(words.length, (p + 1) * PAGE_WORDS),
-    [words.length]
-  );
+  const completedThrough = useRef(Math.min(meta.progressIndex, words.length));
+  const lastCounted = useRef(Math.min(meta.progressIndex, words.length));
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  // "Libro terminado" se registra UNA sola vez por sesión (ver useReaderEngine).
+  const finishRecorded = useRef(meta.finished);
 
   const flush = useCallback(
-    async (finishedBook = false) => {
+    async (opts: { finishedBook?: boolean; atPage?: number } = {}) => {
       const now = performance.now();
       const elapsed = now - enteredAt.current;
       enteredAt.current = now;
       pendingTime.current += elapsed;
       mountTime.current += elapsed;
 
-      const wordsDelta = Math.max(0, maxIndex.current - lastFlushIndex.current);
-      lastFlushIndex.current = maxIndex.current;
+      const wordsDelta = Math.max(
+        0,
+        completedThrough.current - lastCounted.current
+      );
+      lastCounted.current = completedThrough.current;
 
-      const done = finishedBook || maxIndex.current >= words.length;
+      const done =
+        !!opts.finishedBook || completedThrough.current >= words.length;
       await updateBookMeta({
         ...meta,
-        progressIndex: Math.min(maxIndex.current, words.length),
+        progressIndex: done
+          ? words.length
+          : (pageStarts[opts.atPage ?? pageRef.current] ?? 0),
         timeReadMs: meta.timeReadMs + mountTime.current,
         finished: done || meta.finished,
         updatedAt: Date.now(),
@@ -90,19 +158,14 @@ export function PageReader({ meta, words, onMethod }: PageReaderProps) {
       await recordSession({
         wordsRead: wordsDelta,
         timeReadMs: pendingTime.current,
-        speed: settings.speed,
-        finishedBook: done && !meta.finished,
+        // Sin `speed`: el modo autopaso no debe falsear récords ni promedios.
+        finishedBook: done && !finishRecorded.current,
       });
+      if (done) finishRecorded.current = true;
       pendingTime.current = 0;
     },
-    [meta, words.length, settings.speed]
+    [meta, words.length, pageStarts]
   );
-
-  // Al entrar a una página, marcar como leído hasta el final de ella.
-  useEffect(() => {
-    maxIndex.current = Math.max(maxIndex.current, progressThrough(page));
-    enteredAt.current = performance.now();
-  }, [page, progressThrough]);
 
   // Autoguardado cada 5 s + guardado al salir.
   useEffect(() => {
@@ -117,29 +180,32 @@ export function PageReader({ meta, words, onMethod }: PageReaderProps) {
   }, [flush]);
 
   const goPrev = useCallback(() => {
-    void flush();
-    setPage((p) => Math.max(0, p - 1));
-  }, [flush]);
+    const target = Math.max(0, page - 1);
+    setPage(target);
+    void flush({ atPage: target });
+  }, [page, flush]);
 
   const goNext = useCallback(() => {
+    // Pasar una página = esa página quedó leída.
+    completedThrough.current = Math.max(completedThrough.current, pageEnd);
     if (page >= totalPages - 1) {
-      maxIndex.current = words.length;
-      void flush(true);
+      completedThrough.current = words.length;
+      void flush({ finishedBook: true });
       setFinished(true);
       return;
     }
-    void flush();
-    setPage((p) => Math.min(totalPages - 1, p + 1));
-  }, [page, totalPages, words.length, flush]);
+    const target = Math.min(totalPages - 1, page + 1);
+    setPage(target);
+    void flush({ atPage: target });
+  }, [page, totalPages, words.length, pageEnd, flush]);
 
   const openSummary = useCallback(async () => {
     setSummaryLoading(true);
     setSummary("");
-    const upto = progressThrough(page);
-    const text = words.slice(Math.max(0, upto - 1500), upto).join(" ");
+    const text = words.slice(Math.max(0, pageEnd - 1500), pageEnd).join(" ");
     setSummary(await activeProvider.summarize(text));
     setSummaryLoading(false);
-  }, [words, page, progressThrough]);
+  }, [words, pageEnd]);
 
   // Atajos: flechas para pasar página.
   useEffect(() => {
@@ -156,7 +222,7 @@ export function PageReader({ meta, words, onMethod }: PageReaderProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [goNext, goPrev, summary, finished]);
 
-  const pct = ((page + 1) / totalPages) * 100;
+  const pct = totalPages > 0 ? ((page + 1) / totalPages) * 100 : 0;
   const fontPx = Math.min(24, Math.max(16, Math.round(settings.fontSize * 0.32)));
   const isLast = page >= totalPages - 1;
 
@@ -226,42 +292,56 @@ export function PageReader({ meta, words, onMethod }: PageReaderProps) {
       <div className="relative flex flex-1 overflow-hidden">
         {/* Zona toque anterior */}
         <button
-          className="absolute left-0 top-0 z-10 h-full w-1/5"
+          className="absolute left-0 top-0 z-10 h-full w-1/6"
           onClick={goPrev}
           aria-label="Página anterior"
           tabIndex={-1}
         />
         {/* Zona toque siguiente */}
         <button
-          className="absolute right-0 top-0 z-10 h-full w-1/5"
+          className="absolute right-0 top-0 z-10 h-full w-1/6"
           onClick={goNext}
           aria-label="Página siguiente"
           tabIndex={-1}
         />
 
-        <div className="mx-auto flex w-full max-w-2xl items-start overflow-y-auto px-6 py-4">
-          <p
-            className="w-full text-justify"
+        <div
+          ref={scrollRef}
+          className="mx-auto w-full max-w-2xl overflow-y-auto px-6 py-4"
+        >
+          <div
             style={{
               fontFamily: settings.fontFamily,
               fontSize: `${fontPx}px`,
               color: settings.textColor,
               letterSpacing: `${settings.letterSpacing}em`,
               lineHeight: 1.75,
-              hyphens: "auto",
             }}
           >
-            {pageWords.map((w, i) => {
-              if (!settings.bionicEnabled) return <span key={i}>{w} </span>;
-              const { head, tail } = bionicSplit(w);
-              return (
-                <span key={i}>
-                  <b style={{ fontWeight: 700 }}>{head}</b>
-                  {tail}{" "}
-                </span>
-              );
-            })}
-          </p>
+            {pageParagraphs.map((para, pi) => (
+              <p
+                key={para.start}
+                className="text-justify"
+                style={{
+                  hyphens: "auto",
+                  textIndent: pi === 0 ? 0 : "1.35em",
+                  marginBottom: "0.65em",
+                }}
+              >
+                {para.text.map((w, i) => {
+                  if (!settings.bionicEnabled)
+                    return <span key={i}>{w} </span>;
+                  const { head, tail } = bionicSplit(w);
+                  return (
+                    <span key={i}>
+                      <b style={{ fontWeight: 700 }}>{head}</b>
+                      {tail}{" "}
+                    </span>
+                  );
+                })}
+              </p>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -334,8 +414,8 @@ export function PageReader({ meta, words, onMethod }: PageReaderProps) {
         onClose={() => setFinished(false)}
         onReadAgain={() => {
           setPage(0);
-          maxIndex.current = 0;
-          lastFlushIndex.current = 0;
+          completedThrough.current = 0;
+          lastCounted.current = 0;
           setFinished(false);
         }}
       />

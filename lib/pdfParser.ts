@@ -19,6 +19,8 @@ export interface ParsedBook {
   title: string;
   author?: string;
   words: string[];
+  /** Índices de palabra donde empieza cada párrafo (heurística por layout). */
+  paraStarts: number[];
   totalPages: number;
   wordsPerPage: number;
 }
@@ -129,8 +131,19 @@ export async function parsePdf(
       .map(([text]) => text)
   );
 
-  // Second pass: build the clean word stream.
+  // Second pass: build the clean word stream + paragraph boundaries.
+  //
+  // Señal de párrafo en PDFs (que no traen "\n\n"): una línea que termina en
+  // puntuación de cierre de oración seguida de una línea que arranca como
+  // oración nueva (mayúscula, ¿¡, comillas, guión de diálogo). Los inicios se
+  // registran como índice de palabra en el stream plano.
   const words: string[] = [];
+  const paraStarts: number[] = [0];
+  const endsSentence = (text: string) => /[.!?…:][)\]"'”»›]*$/.test(text.trim());
+  const startsParagraph = (text: string) =>
+    /^[(\["'“«‹¿¡—–-]*[\p{Lu}\p{N}]/u.test(text.trim());
+  let prevLineEndedSentence = false;
+
   for (let p = 0; p < pageLines.length; p++) {
     const lines = pageLines[p];
     for (let li = 0; li < lines.length; li++) {
@@ -142,6 +155,16 @@ export async function parsePdf(
 
       const cleaned = line.text.replace(/\s+/g, " ").trim();
       if (!cleaned) continue;
+
+      if (
+        prevLineEndedSentence &&
+        startsParagraph(cleaned) &&
+        words.length > 0
+      ) {
+        paraStarts.push(words.length);
+      }
+      prevLineEndedSentence = endsSentence(cleaned);
+
       for (const w of cleaned.split(" ")) {
         if (w) words.push(w);
       }
@@ -155,6 +178,7 @@ export async function parsePdf(
     title,
     author,
     words,
+    paraStarts,
     totalPages,
     wordsPerPage: words.length / Math.max(totalPages, 1),
   };

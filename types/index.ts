@@ -75,6 +75,12 @@ export interface BookContent {
   id: string;
   /** Every word in reading order. Index === position. */
   words: string[];
+  /**
+   * Índices de palabra donde empieza cada párrafo (detectados al parsear el
+   * PDF). Opcional: los libros guardados antes de esta versión no lo tienen y
+   * la app reconstruye párrafos aproximados por oraciones.
+   */
+  paraStarts?: number[];
 }
 
 export interface Book extends BookMeta {

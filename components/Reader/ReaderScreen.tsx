@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,7 +11,9 @@ import {
   Check,
 } from "lucide-react";
 import { useReaderEngine } from "@/hooks/useReaderEngine";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { sentenceRange } from "@/lib/textStructure";
 import { WordDisplay } from "./WordDisplay";
 import { Controls } from "./Controls";
 import { ProgressBar } from "./ProgressBar";
@@ -54,10 +56,19 @@ function isDarkColor(hex: string): boolean {
 interface ReaderScreenProps {
   meta: BookMeta;
   words: string[];
+  paraStarts?: number[];
   onMethod: (m: ReadingMethod) => void;
+  /** Reporta la posición viva al contenedor (para cambiar de método sin saltos). */
+  onProgress?: (index: number) => void;
 }
 
-export function ReaderScreen({ meta, words, onMethod }: ReaderScreenProps) {
+export function ReaderScreen({
+  meta,
+  words,
+  paraStarts,
+  onMethod,
+  onProgress,
+}: ReaderScreenProps) {
   const router = useRouter();
   const { settings, update } = useSettingsStore();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -108,9 +119,29 @@ export function ReaderScreen({ meta, words, onMethod }: ReaderScreenProps) {
     mode: settings.mode,
     speed: settings.speed,
     comprehensionInterval: settings.comprehensionInterval,
+    paraStarts,
     onComprehension: handleComprehension,
     onFinish: () => setFinished(true),
   });
+
+  // La pantalla no se apaga mientras las palabras fluyen (móvil).
+  useWakeLock(engine.isPlaying);
+
+  // Posición viva para el contenedor (cambio de método sin perder el lugar).
+  useEffect(() => {
+    onProgress?.(engine.index);
+  }, [engine.index, onProgress]);
+
+  // Contexto al pausar: la oración completa alrededor de la palabra actual.
+  // Pausar RSVP dejaba una palabra suelta y sin contexto — la principal causa
+  // de "¿dónde estaba?" al reanudar.
+  const pauseContext = useMemo(() => {
+    if (engine.isPlaying || finished || engine.index === 0) return null;
+    if (words.length === 0) return null;
+    const { start, end } = sentenceRange(words, Math.min(engine.index, words.length - 1));
+    return { start, end };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine.isPlaying, engine.index, finished, words]);
 
   // Advance goal progress as words are read.
   const lastGoalIndex = useRef(meta.progressIndex);
@@ -353,6 +384,42 @@ export function ReaderScreen({ meta, words, onMethod }: ReaderScreenProps) {
             )}
           </button>
         </div>
+
+        {/* Oración de contexto al pausar: re-ancla antes de reanudar. */}
+        {pauseContext && (
+          <div className="pointer-events-none flex justify-center px-8 pb-6">
+            <p
+              className="max-w-2xl text-center text-base leading-relaxed sm:text-lg"
+              style={{
+                fontFamily: settings.fontFamily,
+                color: settings.textColor,
+                opacity: 0.55,
+              }}
+            >
+              {words.slice(pauseContext.start, pauseContext.end + 1).map((w, i) => {
+                const idx = pauseContext.start + i;
+                const isCurrent =
+                  idx >= engine.index && idx < engine.index + engine.chunk.span;
+                return (
+                  <span
+                    key={idx}
+                    style={
+                      isCurrent
+                        ? {
+                            color: settings.orpColor,
+                            fontWeight: 700,
+                            opacity: 1,
+                          }
+                        : undefined
+                    }
+                  >
+                    {w}{" "}
+                  </span>
+                );
+              })}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Bottom controls + progress */}

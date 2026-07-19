@@ -15,6 +15,7 @@ export default function ReaderPage() {
   const router = useRouter();
   const [meta, setMeta] = useState<BookMeta | null>(null);
   const [words, setWords] = useState<string[] | null>(null);
+  const [paraStarts, setParaStarts] = useState<number[] | undefined>(undefined);
   const [status, setStatus] = useState<"loading" | "ready" | "missing">(
     "loading"
   );
@@ -35,6 +36,7 @@ export default function ReaderPage() {
       }
       setMeta(m);
       setWords(c.words);
+      setParaStarts(c.paraStarts);
       setStartIndex(m.progressIndex);
       setStatus("ready");
       // Offer to resume when there is meaningful saved progress.
@@ -72,6 +74,7 @@ export default function ReaderPage() {
         key={`${meta.id}-${startIndex}`}
         meta={{ ...meta, progressIndex: startIndex }}
         words={words}
+        paraStarts={paraStarts}
       />
 
       <Dialog open={askResume} dismissible={false}>

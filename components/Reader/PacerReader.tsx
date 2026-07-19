@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,7 +13,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useReaderEngine } from "@/hooks/useReaderEngine";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { buildSegments, segmentIndexFor } from "@/lib/textStructure";
 import { SpeedSelector } from "./SpeedSelector";
 import { MethodSelector } from "./MethodSelector";
 import { FinishedDialog } from "./FinishedDialog";
@@ -21,31 +23,43 @@ import { SummaryOverlay } from "./SummaryOverlay";
 import { ProgressBar } from "./ProgressBar";
 import { Button } from "@/components/ui/button";
 import { activeProvider } from "@/lib/ai";
-import { cn } from "@/lib/utils";
 import type { BookMeta, ReadingMethod, Speed } from "@/types";
 
-/** Ventana de palabras visibles alrededor de la palabra activa. */
-const WINDOW = 60;
-/** Cuántas palabras ya leídas se muestran antes de la activa (la ancla queda fija). */
-const LEAD = 12;
+/** Tamaño objetivo de cada bloque de texto (palabras). ~4–6 líneas en pantalla. */
+const BLOCK_TARGET = 48;
 
 const ctrlBtn = "text-white/80 hover:text-white hover:bg-white/10 bg-transparent";
 
 interface PacerReaderProps {
   meta: BookMeta;
   words: string[];
+  paraStarts?: number[];
   onMethod: (m: ReadingMethod) => void;
+  /** Reporta la posición viva al contenedor (para cambiar de método sin saltos). */
+  onProgress?: (index: number) => void;
 }
 
 /**
- * Modo Guía (escalón 2): el texto se ve en contexto y un realce barre a ritmo
- * fijo, guiando la mirada palabra por palabra. Es el puente entre "que me den
- * las palabras" (RSVP) y "yo recorro la página" (Página).
+ * Modo Guía (escalón 2): un bloque de texto QUIETO y un realce que barre
+ * palabra a palabra. El texto no se mueve — se mueven tus ojos. Ese es el
+ * entrenamiento: recorrer texto estático con ritmo externo, el puente entre
+ * "las palabras vienen solas" (RSVP) y "yo recorro la página" (Página).
  *
- * Reutiliza el motor RSVP —misma cadencia, mismo guardado de progreso y
- * estadísticas— pero pinta el texto completo con la palabra activa resaltada.
+ * Los bloques terminan siempre en fin de oración (~48 palabras) y solo se
+ * reemplazan al completarse: cero reflow durante el barrido. (La versión
+ * anterior deslizaba una ventana de palabras centrada: TODO el texto se
+ * reacomodaba en cada tick.)
+ *
+ * Reutiliza el motor RSVP — misma cadencia (con calentamiento y respiro de
+ * párrafo), mismo guardado de progreso y estadísticas.
  */
-export function PacerReader({ meta, words, onMethod }: PacerReaderProps) {
+export function PacerReader({
+  meta,
+  words,
+  paraStarts,
+  onMethod,
+  onProgress,
+}: PacerReaderProps) {
   const router = useRouter();
   const { settings, update } = useSettingsStore();
 
@@ -61,19 +75,31 @@ export function PacerReader({ meta, words, onMethod }: PacerReaderProps) {
     // La comprensión intercalada vive en RSVP; aquí el foco es reentrenar la
     // mirada. La consolidación al terminar sigue activa.
     comprehensionInterval: 0,
+    paraStarts,
     onFinish: () => setFinished(true),
   });
+
+  useWakeLock(engine.isPlaying);
 
   const span = engine.chunk.span;
   const index = engine.index;
 
-  // Ventana estable: la palabra activa queda siempre en el mismo lugar y el
-  // texto fluye por detrás (efecto teleprompter, sin saltos).
-  const winStart = Math.max(0, index - LEAD);
-  const winEnd = Math.min(words.length, winStart + WINDOW);
-  const windowWords = useMemo(
-    () => words.slice(winStart, winEnd),
-    [words, winStart, winEnd]
+  // Posición viva para el contenedor (cambio de método sin perder el lugar).
+  useEffect(() => {
+    onProgress?.(index);
+  }, [index, onProgress]);
+
+  // Bloques estables: calculados una vez por libro, cortados en fin de oración.
+  const blockStarts = useMemo(
+    () => buildSegments(words, BLOCK_TARGET, { min: 20, max: 90 }),
+    [words]
+  );
+  const blockIdx = segmentIndexFor(blockStarts, Math.min(index, words.length - 1));
+  const blockStart = blockStarts[blockIdx] ?? 0;
+  const blockEnd = blockStarts[blockIdx + 1] ?? words.length; // exclusivo
+  const blockWords = useMemo(
+    () => words.slice(blockStart, blockEnd),
+    [words, blockStart, blockEnd]
   );
 
   const openSummary = useCallback(async () => {
@@ -114,7 +140,7 @@ export function PacerReader({ meta, words, onMethod }: PacerReaderProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [engine, summary, finished]);
 
-  const highlight = settings.orpEnabled ? settings.orpColor : "#3b82f6";
+  const highlight = settings.orpColor;
 
   return (
     <div
@@ -143,20 +169,20 @@ export function PacerReader({ meta, words, onMethod }: PacerReaderProps) {
         </button>
       </div>
 
-      {/* Reading stage — texto en contexto con realce guía. */}
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-6">
+      {/* Escenario: bloque quieto, realce que barre. */}
+      <div className="flex flex-1 items-center justify-center overflow-hidden px-6 sm:px-10">
         <p
-          className="max-w-3xl select-none text-center"
+          className="w-full max-w-2xl select-none text-left"
           style={{
             fontFamily: settings.fontFamily,
             fontSize: `clamp(20px, ${Math.max(22, settings.fontSize * 0.42)}px, 34px)`,
             color: settings.textColor,
             letterSpacing: `${settings.letterSpacing}em`,
-            lineHeight: 1.9,
+            lineHeight: 1.85,
           }}
         >
-          {windowWords.map((w, i) => {
-            const globalIdx = winStart + i;
+          {blockWords.map((w, i) => {
+            const globalIdx = blockStart + i;
             const isActive = globalIdx >= index && globalIdx < index + span;
             const isRead = globalIdx < index;
             return (
@@ -172,7 +198,7 @@ export function PacerReader({ meta, words, onMethod }: PacerReaderProps) {
                         boxDecorationBreak: "clone",
                         WebkitBoxDecorationBreak: "clone",
                       }
-                    : { opacity: isRead ? 0.3 : 0.72 }
+                    : { opacity: isRead ? 0.35 : 0.85 }
                 }
               >
                 {w}{" "}

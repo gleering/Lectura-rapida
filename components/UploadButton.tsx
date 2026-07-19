@@ -69,7 +69,7 @@ export function UploadButton({
           wordsPerPage: parsed.wordsPerPage,
           summaryLoading: true,
         };
-        await saveBook(meta, parsed.words);
+        await saveBook(meta, parsed.words, parsed.paraStarts);
 
         // Generar resumen en background
         setProgress(75);

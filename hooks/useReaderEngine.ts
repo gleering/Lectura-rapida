@@ -14,6 +14,12 @@ interface UseReaderEngineOpts {
   speed: Speed;
   /** Fire every `comprehensionInterval` words (0 disables). */
   comprehensionInterval: number;
+  /**
+   * Índices de inicio de párrafo: el primer chunk de cada párrafo se muestra
+   * un poco más — un respiro que marca la transición, como el ojo al saltar
+   * de párrafo en un libro real.
+   */
+  paraStarts?: number[];
   onComprehension?: (index: number) => void;
   onFinish?: () => void;
 }
@@ -40,6 +46,7 @@ export function useReaderEngine(opts: UseReaderEngineOpts): ReaderEngineApi {
     mode,
     speed,
     comprehensionInterval,
+    paraStarts,
     onComprehension,
     onFinish,
   } = opts;
@@ -51,6 +58,10 @@ export function useReaderEngine(opts: UseReaderEngineOpts): ReaderEngineApi {
   // Pending deltas since the last flush — consumed by recordSession, then reset.
   const pendingWords = useRef(0);
   const pendingTime = useRef(0);
+  // "Libro terminado" se registra UNA sola vez: sin esto, cada flush posterior
+  // (autoguardado, unmount) lo volvía a contar porque `meta.finished` del
+  // closure queda desactualizado.
+  const finishRecorded = useRef(meta.finished);
   // Running totals for this mount — never reset, so book meta stays accurate
   // across repeated autosaves within a single reading session.
   const mountTime = useRef(0);
@@ -99,12 +110,20 @@ export function useReaderEngine(opts: UseReaderEngineOpts): ReaderEngineApi {
       wordsRead: pendingWords.current,
       timeReadMs: pendingTime.current,
       speed,
-      finishedBook: finished && !meta.finished,
+      finishedBook: finished && !finishRecorded.current,
     });
+    if (finished) finishRecorded.current = true;
     pendingWords.current = 0;
     pendingTime.current = 0;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meta, words.length, speed]);
+
+  // Set de inicios de párrafo para el respiro de transición (lookup O(1)).
+  const paraStartSet = useRef<Set<number> | null>(null);
+  useEffect(() => {
+    paraStartSet.current =
+      paraStarts && paraStarts.length > 0 ? new Set(paraStarts) : null;
+  }, [paraStarts]);
 
   // Build the engine once per book. Speed/mode are pushed in imperatively.
   useEffect(() => {
@@ -113,6 +132,7 @@ export function useReaderEngine(opts: UseReaderEngineOpts): ReaderEngineApi {
       startIndex: currentIndex.current,
       mode,
       wpm: speed,
+      extraDelayAt: (i) => (paraStartSet.current?.has(i) ? 1.35 : 1),
       onTick: (i) => {
         const prev = currentIndex.current;
         if (i > prev) pendingWords.current += i - prev;

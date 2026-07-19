@@ -16,7 +16,12 @@ export function todayKey(d = new Date()): string {
 export interface SessionDelta {
   wordsRead: number;
   timeReadMs: number;
-  speed: number; // wpm active during the session
+  /**
+   * WPM del ritmo automático durante la sesión. Omitir en modos autopaso
+   * (Página): ahí no hay velocidad configurada y registrarla falsearía el
+   * récord y el promedio.
+   */
+  speed?: number;
   finishedBook?: boolean;
 }
 
@@ -29,13 +34,16 @@ export async function recordSession(delta: SessionDelta): Promise<void> {
     getDailyStats(),
   ]);
 
+  const speed = delta.speed ?? 0;
   const nextGlobal: GlobalStats = {
     totalTimeMs: global.totalTimeMs + delta.timeReadMs,
     totalWordsRead: global.totalWordsRead + delta.wordsRead,
-    maxSpeed: Math.max(global.maxSpeed, delta.speed),
+    maxSpeed: Math.max(global.maxSpeed, speed),
     booksFinished: global.booksFinished + (delta.finishedBook ? 1 : 0),
-    speedSampleSum: global.speedSampleSum + delta.speed * delta.wordsRead,
-    speedSampleCount: global.speedSampleCount + delta.wordsRead,
+    // Solo los modos con ritmo automático aportan muestras de velocidad.
+    speedSampleSum: global.speedSampleSum + speed * delta.wordsRead,
+    speedSampleCount:
+      global.speedSampleCount + (speed > 0 ? delta.wordsRead : 0),
   };
 
   const key = todayKey();
@@ -43,13 +51,13 @@ export async function recordSession(delta: SessionDelta): Promise<void> {
   if (day) {
     day.wordsRead += delta.wordsRead;
     day.timeReadMs += delta.timeReadMs;
-    day.maxSpeed = Math.max(day.maxSpeed, delta.speed);
+    day.maxSpeed = Math.max(day.maxSpeed, speed);
   } else {
     daily.push({
       date: key,
       wordsRead: delta.wordsRead,
       timeReadMs: delta.timeReadMs,
-      maxSpeed: delta.speed,
+      maxSpeed: speed,
     });
   }
 

@@ -2,39 +2,29 @@
 
 import * as React from "react";
 import { splitAtOrp } from "@/lib/orp";
+import { bionicSplit } from "@/lib/bionic";
 import type { ReaderSettings } from "@/types";
-import type { SemanticGroup } from "@/lib/semantic-groups";
 
 interface WordDisplayProps {
   chunkText: string;
   pivotWord: string;
   settings: ReaderSettings;
-  currentWordIndex?: number;
-  semanticGroup?: SemanticGroup | null;
-  wordImportance?: number;
 }
 
 /**
- * Renders the current chunk con soporte para:
- * - RSVP (One word at a time with ORP)
- * - Grupos Semánticos (2-4 palabras con fijación natural)
- * - Degradados dinámicos basados en importancia
+ * Renderiza el chunk actual:
+ * - 1 palabra: ORP clásico — la letra pivote queda clavada en el centro de la
+ *   pantalla y pintada con el color ORP. Sin transiciones ni cambios de tamaño:
+ *   a 600 ppm cualquier animación emborrona.
+ * - 2–3 palabras: el chunk centrado con anclas de fijación (inicio de cada
+ *   palabra en negrita) — el ORP de una sola letra no tiene sentido cuando la
+ *   mirada debe abarcar un grupo.
  */
 export const WordDisplay = React.memo(function WordDisplay({
   chunkText,
   pivotWord,
   settings,
-  wordImportance = 0.5,
-  semanticGroup,
 }: WordDisplayProps) {
-  // Calcular colores dinámicos basados en importancia
-  const getGradientColor = (importance: number): string => {
-    if (importance > 0.7) return settings.orpColor; // Palabras clave: color destacado
-    if (importance > 0.5) return settings.textColor; // Normales: color base
-    // Palabras menos importantes: un poco más tenues
-    return settings.textColor + "99"; // 60% opacity
-  };
-
   const style: React.CSSProperties = {
     fontFamily: settings.fontFamily,
     fontSize: settings.fontSize,
@@ -44,67 +34,54 @@ export const WordDisplay = React.memo(function WordDisplay({
     fontWeight: 600,
   };
 
-  if (!settings.orpEnabled) {
+  const isMultiWord = chunkText.includes(" ");
+
+  if (!settings.orpEnabled || isMultiWord) {
     return (
       <div className="text-center" style={style}>
-        {chunkText}
+        {isMultiWord
+          ? chunkText.split(" ").map((w, i) => {
+              const { head, tail } = bionicSplit(w);
+              return (
+                <span key={i} className="whitespace-pre">
+                  <b style={{ fontWeight: 800 }}>{head}</b>
+                  {tail}
+                  {" "}
+                </span>
+              );
+            })
+          : chunkText}
       </div>
     );
   }
 
   const { before, pivot, after } = splitAtOrp(pivotWord);
-  const rest = chunkText.slice(pivotWord.length);
-
-  const pivotColor = getGradientColor(wordImportance);
-  const pivotSize = `${settings.fontSize * (0.9 + wordImportance * 0.2)}px`;
 
   return (
-    <div className="relative flex w-full items-baseline justify-center" style={style}>
-      {/* Guía visual vertical mejorada */}
-      <div
-        className="pointer-events-none absolute inset-y-0 w-1 bg-gradient-to-b"
-        style={{
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: `linear-gradient(to bottom, ${settings.orpColor}00, ${settings.orpColor}40, ${settings.orpColor}00)`,
-          opacity: 0.3,
-        }}
-      />
-
-      {/* Información del grupo semántico */}
-      {semanticGroup && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-          {semanticGroup.type === "sentence" ? "Oración" : "Frase"} •{" "}
-          {Math.round(semanticGroup.importance * 100)}% importante
-        </div>
-      )}
-
-      {/* Left half */}
-      <span className="flex-1 whitespace-pre text-right" style={{ opacity: 0.6 }}>
+    <div
+      className="relative flex w-full items-baseline justify-center"
+      style={style}
+    >
+      {/* Mitad izquierda — termina exactamente en el centro. */}
+      <span className="flex-1 whitespace-pre text-right" style={{ opacity: 0.85 }}>
         {before}
       </span>
 
-      {/* Pivot palabra con énfasis dinámico */}
+      {/* Letra pivote: el punto de reconocimiento óptimo, siempre en el centro
+          y siempre en el color guía. */}
       <span
         style={{
-          color: pivotColor,
-          fontSize: pivotSize,
-          fontWeight: 700,
-          transition: "all 0.2s ease-out",
-          textShadow:
-            wordImportance > 0.7
-              ? `0 0 10px ${settings.orpColor}40`
-              : "none",
+          color: settings.orpColor,
+          fontWeight: 800,
           whiteSpace: "pre",
         }}
       >
         {pivot}
       </span>
 
-      {/* Right half */}
-      <span className="flex-1 whitespace-pre text-left">
+      {/* Mitad derecha. */}
+      <span className="flex-1 whitespace-pre text-left" style={{ opacity: 0.85 }}>
         {after}
-        {rest}
       </span>
     </div>
   );
