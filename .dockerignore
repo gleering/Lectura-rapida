@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+npm-debug.log
+README.md
+DEPLOY.md
+AI_SETUP.md
+SPEC_APRENDIZAJE.md
+deploy
+ecosystem.config.js
+.env
+.env.local
+.env*.local
+*.log

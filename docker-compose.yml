@@ -1,0 +1,43 @@
+# ReadFlow — despliegue aislado en un contenedor propio.
+# Se conecta a la red existente `dokploy-network` para que el Traefik ya
+# instalado en el VPS enrute readflow.gleering.com.ar con HTTPS automático.
+# NO toca ni comparte estado con los demás contenedores de producción.
+#
+# Uso en el VPS:
+#   GEMINI_API_KEY=... docker compose up -d --build
+#
+# La clave se inyecta en runtime desde el entorno del shell o un archivo .env
+# (que NO se commitea). Nunca queda dentro de la imagen.
+
+services:
+  readflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: readflow:latest
+    container_name: readflow
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?Falta GEMINI_API_KEY en el entorno}
+    networks:
+      - dokploy-network
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "dokploy-network"
+      # HTTP -> redirección a HTTPS
+      traefik.http.routers.readflow-http.entrypoints: "web"
+      traefik.http.routers.readflow-http.rule: "Host(`readflow.gleering.com.ar`)"
+      traefik.http.routers.readflow-http.middlewares: "readflow-https-redirect"
+      traefik.http.middlewares.readflow-https-redirect.redirectscheme.scheme: "https"
+      # HTTPS con certificado Let's Encrypt
+      traefik.http.routers.readflow-https.entrypoints: "websecure"
+      traefik.http.routers.readflow-https.rule: "Host(`readflow.gleering.com.ar`)"
+      traefik.http.routers.readflow-https.tls: "true"
+      traefik.http.routers.readflow-https.tls.certresolver: "letsencrypt"
+      # Puerto interno del contenedor (Next escucha en 3000)
+      traefik.http.services.readflow-app.loadbalancer.server.port: "3000"
+
+networks:
+  dokploy-network:
+    external: true
