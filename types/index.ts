@@ -81,6 +81,38 @@ export interface BookContent {
    * la app reconstruye párrafos aproximados por oraciones.
    */
   paraStarts?: number[];
+  /** Secciones detectadas (índice). Ausente en libros previos → se recalcula. */
+  sections?: BookSection[];
+  /** Índice de palabra donde arranca cada página FÍSICA del PDF. Para mapear el
+   *  índice embebido (getOutline). No confundir con la paginación de lectura de
+   *  PageReader. */
+  pdfPageStarts?: number[];
+}
+
+/** Categoría de una sección del índice, para ícono y agrupación en la UI. */
+export type SectionKind =
+  | "cover"
+  | "prologue"
+  | "preface"
+  | "introduction"
+  | "part"
+  | "chapter"
+  | "subchapter"
+  | "epilogue"
+  | "appendix"
+  | "bibliography"
+  | "other";
+
+/** Una sección del índice del libro. El fin de la sección se deriva del
+ *  `startWord` de la siguiente sección (en orden) o del fin del libro. */
+export interface BookSection {
+  id: string;
+  title: string;
+  /** 0 = nivel superior (parte), 1 = capítulo, 2 = subcapítulo… */
+  level: number;
+  kind: SectionKind;
+  /** Índice de palabra donde empieza la sección. */
+  startWord: number;
 }
 
 export interface Book extends BookMeta {
