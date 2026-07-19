@@ -9,6 +9,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type {
   BookMeta,
   BookContent,
+  BookSection,
   DailyStat,
   GlobalStats,
   ReadingGoal,
@@ -84,13 +85,17 @@ function getDb() {
 export async function saveBook(
   meta: BookMeta,
   words: string[],
-  paraStarts?: number[]
+  paraStarts?: number[],
+  sections?: BookSection[],
+  pdfPageStarts?: number[]
 ): Promise<void> {
   const db = await getDb();
   const tx = db.transaction(["books", "content"], "readwrite");
   await Promise.all([
     tx.objectStore("books").put(meta),
-    tx.objectStore("content").put({ id: meta.id, words, paraStarts }),
+    tx
+      .objectStore("content")
+      .put({ id: meta.id, words, paraStarts, sections, pdfPageStarts }),
     tx.done,
   ]);
 }
@@ -110,6 +115,17 @@ export async function getBookContent(
 ): Promise<BookContent | undefined> {
   const db = await getDb();
   return db.get("content", id);
+}
+
+/** Cachea las secciones detectadas bajo demanda (libros previos sin índice). */
+export async function updateBookSections(
+  id: string,
+  sections: BookSection[]
+): Promise<void> {
+  const db = await getDb();
+  const content = await db.get("content", id);
+  if (!content) return;
+  await db.put("content", { ...content, sections });
 }
 
 export async function listBooks(): Promise<BookMeta[]> {
