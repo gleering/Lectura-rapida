@@ -21,9 +21,10 @@ import { MethodSelector } from "./MethodSelector";
 import { FinishedDialog } from "./FinishedDialog";
 import { SummaryOverlay } from "./SummaryOverlay";
 import { ProgressBar } from "./ProgressBar";
+import { ChapterNav } from "./ChapterNav";
 import { Button } from "@/components/ui/button";
 import { activeProvider } from "@/lib/ai";
-import type { BookMeta, ReadingMethod, Speed } from "@/types";
+import type { BookMeta, ReadingMethod, Speed, BookSection } from "@/types";
 
 /** Tamaño objetivo de cada bloque de texto (palabras). ~4–6 líneas en pantalla. */
 const BLOCK_TARGET = 48;
@@ -34,6 +35,7 @@ interface PacerReaderProps {
   meta: BookMeta;
   words: string[];
   paraStarts?: number[];
+  sections?: BookSection[];
   onMethod: (m: ReadingMethod) => void;
   /** Reporta la posición viva al contenedor (para cambiar de método sin saltos). */
   onProgress?: (index: number) => void;
@@ -57,6 +59,7 @@ export function PacerReader({
   meta,
   words,
   paraStarts,
+  sections,
   onMethod,
   onProgress,
 }: PacerReaderProps) {
@@ -149,18 +152,30 @@ export function PacerReader({
     >
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 py-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            void engine.flush();
-            router.push("/");
-          }}
-          className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
-          aria-label="Volver"
-        >
-          <ArrowLeft />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              void engine.flush();
+              router.push("/");
+            }}
+            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
+            aria-label="Volver"
+          >
+            <ArrowLeft />
+          </Button>
+          {sections && sections.length > 0 && (
+            <ChapterNav
+              sections={sections}
+              totalWords={words.length}
+              currentWord={engine.index}
+              wpm={settings.speed}
+              onSeek={engine.seekTo}
+              dark
+            />
+          )}
+        </div>
         <button
           onClick={openSummary}
           className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white mix-blend-difference"
