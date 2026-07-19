@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { BookMeta } from "@/types";
-import { ReaderScreen } from "@/components/Reader/ReaderScreen";
+import { ReaderContainer } from "@/components/Reader/ReaderContainer";
 
 export default function ReaderPage() {
   const params = useParams<{ id: string }>();
@@ -68,7 +68,7 @@ export default function ReaderPage() {
 
   return (
     <>
-      <ReaderScreen
+      <ReaderContainer
         key={`${meta.id}-${startIndex}`}
         meta={{ ...meta, progressIndex: startIndex }}
         words={words}

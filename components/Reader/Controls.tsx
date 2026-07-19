@@ -12,13 +12,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SpeedSelector } from "./SpeedSelector";
-import type { ReaderMode, Speed } from "@/types";
+import { MethodSelector } from "./MethodSelector";
+import type { ReaderMode, ReadingMethod, Speed } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface ControlsProps {
   isPlaying: boolean;
   speed: Speed;
   mode: ReaderMode;
+  method: ReadingMethod;
   orpEnabled: boolean;
   isFullscreen: boolean;
   onToggle: () => void;
@@ -27,6 +29,7 @@ interface ControlsProps {
   onEnd: () => void;
   onSpeed: (s: Speed) => void;
   onMode: (m: ReaderMode) => void;
+  onMethod: (m: ReadingMethod) => void;
   onToggleOrp: (v: boolean) => void;
   onFullscreen: () => void;
 }
@@ -38,6 +41,7 @@ export function Controls({
   isPlaying,
   speed,
   mode,
+  method,
   orpEnabled,
   isFullscreen,
   onToggle,
@@ -46,11 +50,14 @@ export function Controls({
   onEnd,
   onSpeed,
   onMode,
+  onMethod,
   onToggleOrp,
   onFullscreen,
 }: ControlsProps) {
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* Escalera de rehabilitación: RSVP → Guía → Página */}
+      <MethodSelector method={method} onMethod={onMethod} dark />
       {/* Transport */}
       <div className="flex items-center gap-1 sm:gap-2">
         <Button

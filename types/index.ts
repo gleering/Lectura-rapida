@@ -2,6 +2,46 @@
 
 export type ReaderMode = 1 | 2 | 3;
 
+/**
+ * Estilo de presentación de la lectura — una escalera de rehabilitación que
+ * retira andamiaje progresivamente:
+ *   rsvp  → las palabras vienen solas (máxima ayuda, sin movimiento ocular).
+ *   pacer → texto en contexto con un realce guía que barre a ritmo fijo.
+ *   page  → página autopaso, como un libro real (mínima ayuda; la graduación).
+ */
+export type ReadingMethod = "rsvp" | "pacer" | "page";
+
+export interface ReadingMethodInfo {
+  id: ReadingMethod;
+  label: string;
+  /** Frase corta que explica para qué sirve en la rehabilitación. */
+  tagline: string;
+  /** Escalón en la escalera (1 = más ayuda). */
+  step: number;
+}
+
+/** Orden de la escalera, del más asistido al más autónomo. */
+export const READING_METHODS: ReadingMethodInfo[] = [
+  {
+    id: "rsvp",
+    label: "RSVP",
+    tagline: "Las palabras vienen solas. Reconstruye el foco.",
+    step: 1,
+  },
+  {
+    id: "pacer",
+    label: "Guía",
+    tagline: "Un realce guía tu mirada por el texto a ritmo fijo.",
+    step: 2,
+  },
+  {
+    id: "page",
+    label: "Página",
+    tagline: "Página a tu ritmo, como un libro real. La graduación.",
+    step: 3,
+  },
+];
+
 export const SPEED_OPTIONS = [
   100, 200, 300, 400, 500, 600, 700, 800, 1000, 1200, 1500, 2000,
 ] as const;
@@ -191,6 +231,10 @@ export interface ReaderSettings {
   speed: Speed;
   /** Ask a comprehension question every N words (0 = disabled). */
   comprehensionInterval: number;
+  /** Estilo de lectura activo (RSVP / Guía / Página). */
+  method: ReadingMethod;
+  /** Resalta las primeras letras de cada palabra (ancla de fijación) en modo Página. */
+  bionicEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: ReaderSettings = {
@@ -207,4 +251,6 @@ export const DEFAULT_SETTINGS: ReaderSettings = {
   mode: 1,
   speed: 300,
   comprehensionInterval: 0,
+  method: "rsvp",
+  bionicEnabled: true,
 };

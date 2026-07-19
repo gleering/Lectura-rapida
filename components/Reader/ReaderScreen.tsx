@@ -33,7 +33,13 @@ import {
 import { extractReviewConcepts } from "@/lib/active-recall";
 import { createReviewCard } from "@/lib/spaced-repetition";
 import { cn, formatNumber } from "@/lib/utils";
-import type { BookMeta, ReaderMode, Speed, ReadingGoal } from "@/types";
+import type {
+  BookMeta,
+  ReaderMode,
+  ReadingMethod,
+  Speed,
+  ReadingGoal,
+} from "@/types";
 
 /** Perceived luminance of a hex colour (0–1). */
 function isDarkColor(hex: string): boolean {
@@ -48,9 +54,10 @@ function isDarkColor(hex: string): boolean {
 interface ReaderScreenProps {
   meta: BookMeta;
   words: string[];
+  onMethod: (m: ReadingMethod) => void;
 }
 
-export function ReaderScreen({ meta, words }: ReaderScreenProps) {
+export function ReaderScreen({ meta, words, onMethod }: ReaderScreenProps) {
   const router = useRouter();
   const { settings, update } = useSettingsStore();
   const stageRef = useRef<HTMLDivElement>(null);
@@ -363,6 +370,7 @@ export function ReaderScreen({ meta, words }: ReaderScreenProps) {
           isPlaying={engine.isPlaying}
           speed={settings.speed}
           mode={settings.mode}
+          method={settings.method}
           orpEnabled={settings.orpEnabled}
           isFullscreen={isFullscreen}
           onToggle={engine.toggle}
@@ -371,6 +379,7 @@ export function ReaderScreen({ meta, words }: ReaderScreenProps) {
           onEnd={engine.toEnd}
           onSpeed={(s: Speed) => update({ speed: s })}
           onMode={(m: ReaderMode) => update({ mode: m })}
+          onMethod={onMethod}
           onToggleOrp={(v) => update({ orpEnabled: v })}
           onFullscreen={toggleFullscreen}
         />
