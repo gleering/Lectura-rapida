@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -26,8 +33,9 @@ import { Button } from "@/components/ui/button";
 import { activeProvider } from "@/lib/ai";
 import type { BookMeta, ReadingMethod, Speed, BookSection } from "@/types";
 
-/** Tamaño objetivo de cada bloque de texto (palabras). ~4–6 líneas en pantalla. */
-const BLOCK_TARGET = 48;
+/** Tamaño objetivo de cada bloque de texto (palabras). Se mantiene moderado para
+ *  que quepa incluso en pantallas chicas; la fuente se auto-ajusta a la altura. */
+const BLOCK_TARGET = 42;
 
 const ctrlBtn = "text-white/80 hover:text-white hover:bg-white/10 bg-transparent";
 
@@ -94,7 +102,7 @@ export function PacerReader({
 
   // Bloques estables: calculados una vez por libro, cortados en fin de oración.
   const blockStarts = useMemo(
-    () => buildSegments(words, BLOCK_TARGET, { min: 20, max: 90 }),
+    () => buildSegments(words, BLOCK_TARGET, { min: 18, max: 62 }),
     [words]
   );
   const blockIdx = segmentIndexFor(blockStarts, Math.min(index, words.length - 1));
@@ -143,6 +151,53 @@ export function PacerReader({
     return () => window.removeEventListener("keydown", onKey);
   }, [engine, summary, finished]);
 
+  // La fuente se auto-ajusta para que el bloque COMPLETO entre en el escenario,
+  // sin recortes, en cualquier tamaño de pantalla (clave en móvil). Búsqueda
+  // binaria del mayor tamaño que cabe en alto y ancho; se recalcula al cambiar
+  // de bloque o al redimensionar/rotar (ResizeObserver).
+  const stageRef = useRef<HTMLDivElement>(null);
+  const blockRef = useRef<HTMLParagraphElement>(null);
+  const maxFont = Math.min(34, Math.max(20, settings.fontSize * 0.42));
+  const [fitFont, setFitFont] = useState(maxFont);
+
+  useLayoutEffect(() => {
+    const container = stageRef.current;
+    const el = blockRef.current;
+    if (!container || !el) return;
+    const fit = () => {
+      const minPx = 15;
+      const availH = container.clientHeight;
+      const availW = container.clientWidth;
+      let lo = minPx;
+      let hi = Math.round(maxFont);
+      let best = minPx;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        el.style.fontSize = `${mid}px`;
+        if (el.scrollHeight <= availH && el.scrollWidth <= availW) {
+          best = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      el.style.fontSize = `${best}px`;
+      setFitFont(best);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(container);
+    // Refuerzo para rotación/redimensionado (por si el observer no dispara).
+    window.addEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("orientationchange", fit);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockStart, blockEnd, maxFont, settings.fontFamily, settings.letterSpacing]);
+
   const highlight = settings.orpColor;
 
   return (
@@ -185,12 +240,16 @@ export function PacerReader({
       </div>
 
       {/* Escenario: bloque quieto, realce que barre. */}
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-6 sm:px-10">
+      <div
+        ref={stageRef}
+        className="flex flex-1 items-center justify-center overflow-hidden px-6 sm:px-10"
+      >
         <p
+          ref={blockRef}
           className="w-full max-w-2xl select-none text-left"
           style={{
             fontFamily: settings.fontFamily,
-            fontSize: `clamp(20px, ${Math.max(22, settings.fontSize * 0.42)}px, 34px)`,
+            fontSize: `${fitFont}px`,
             color: settings.textColor,
             letterSpacing: `${settings.letterSpacing}em`,
             lineHeight: 1.85,
