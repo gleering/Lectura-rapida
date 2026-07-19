@@ -5,13 +5,15 @@ import { useSettingsStore } from "@/store/useSettingsStore";
 import { ReaderScreen } from "./ReaderScreen";
 import { PacerReader } from "./PacerReader";
 import { PageReader } from "./PageReader";
-import type { BookMeta, ReadingMethod } from "@/types";
+import type { BookMeta, ReadingMethod, BookSection } from "@/types";
 
 interface ReaderContainerProps {
   meta: BookMeta;
   words: string[];
   /** Inicios de párrafo detectados al parsear (libros nuevos). */
   paraStarts?: number[];
+  /** Índice del libro (secciones). Se propaga a los 3 modos. */
+  sections?: BookSection[];
 }
 
 /**
@@ -28,6 +30,7 @@ export function ReaderContainer({
   meta,
   words,
   paraStarts,
+  sections,
 }: ReaderContainerProps) {
   const method = useSettingsStore((s) => s.settings.method);
   const update = useSettingsStore((s) => s.update);
@@ -54,6 +57,7 @@ export function ReaderContainer({
     meta: effectiveMeta,
     words,
     paraStarts,
+    sections,
     onMethod,
     onProgress,
   };
