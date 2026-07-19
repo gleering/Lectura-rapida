@@ -1,0 +1,22 @@
+# Caddy — opción recomendada (HTTPS automático con Let's Encrypt).
+#
+# Instalar Caddy:  https://caddyserver.com/docs/install
+# Colocar este bloque en /etc/caddy/Caddyfile y recargar:
+#   sudo caddy reload --config /etc/caddy/Caddyfile
+#
+# Caddy obtiene y renueva el certificado TLS solo. No hace falta certbot.
+# Requisito: el DNS de readflow.gleering.com.ar debe apuntar (registro A) a la IP del VPS.
+
+readflow.gleering.com.ar {
+	encode gzip zstd
+	reverse_proxy localhost:3000
+
+	# Cabeceras de seguridad básicas.
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options SAMEORIGIN
+		Referrer-Policy strict-origin-when-cross-origin
+		# HSTS: fuerza HTTPS en el navegador durante 1 año.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+}
