@@ -3,11 +3,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { getBookMeta, getBookContent, updateBookMeta } from "@/lib/storage";
+import {
+  getBookMeta,
+  getBookContent,
+  updateBookMeta,
+  updateBookSections,
+} from "@/lib/storage";
+import {
+  detectSectionsFromWords,
+  normalizeSections,
+} from "@/lib/tableOfContents";
 import { formatNumber } from "@/lib/utils";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { BookMeta } from "@/types";
+import type { BookMeta, BookSection } from "@/types";
 import { ReaderContainer } from "@/components/Reader/ReaderContainer";
 
 export default function ReaderPage() {
@@ -21,6 +30,7 @@ export default function ReaderPage() {
   );
   const [askResume, setAskResume] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+  const [sections, setSections] = useState<BookSection[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -38,6 +48,18 @@ export default function ReaderPage() {
       setWords(c.words);
       setParaStarts(c.paraStarts);
       setStartIndex(m.progressIndex);
+
+      // Índice: usar el guardado, o detectarlo bajo demanda (libros previos)
+      // a partir del texto y cachearlo para la próxima vez.
+      let secs = c.sections;
+      if (!secs || secs.length === 0) {
+        secs = normalizeSections(
+          c.words.length,
+          detectSectionsFromWords(c.words)
+        );
+        void updateBookSections(params.id, secs);
+      }
+      setSections(secs);
       setStatus("ready");
       // Offer to resume when there is meaningful saved progress.
       if (m.progressIndex > 5 && m.progressIndex < c.words.length - 1) {
@@ -75,6 +97,7 @@ export default function ReaderPage() {
         meta={{ ...meta, progressIndex: startIndex }}
         words={words}
         paraStarts={paraStarts}
+        sections={sections}
       />
 
       <Dialog open={askResume} dismissible={false}>
