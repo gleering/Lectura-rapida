@@ -5,6 +5,13 @@
 // progress so the processing screen can animate a real progress bar.
 
 import * as pdfjsLib from "pdfjs-dist";
+import type { BookSection } from "@/types";
+import {
+  buildSectionsFromOutline,
+  detectSectionsFromLines,
+  normalizeSections,
+  type LineRef,
+} from "@/lib/tableOfContents";
 
 // Point pdf.js at the worker bundle. Webpack emits this file and rewrites the
 // URL at build time, so it works offline without a CDN.
@@ -23,6 +30,10 @@ export interface ParsedBook {
   paraStarts: number[];
   totalPages: number;
   wordsPerPage: number;
+  /** Secciones detectadas (índice), ya normalizadas. */
+  sections: BookSection[];
+  /** Palabra donde arranca cada página física del PDF. */
+  pdfPageStarts: number[];
 }
 
 interface Line {
@@ -139,12 +150,15 @@ export async function parsePdf(
   // registran como índice de palabra en el stream plano.
   const words: string[] = [];
   const paraStarts: number[] = [0];
+  const pdfPageStarts: number[] = [];
+  const lineIndex: LineRef[] = [];
   const endsSentence = (text: string) => /[.!?…:][)\]"'”»›]*$/.test(text.trim());
   const startsParagraph = (text: string) =>
     /^[(\["'“«‹¿¡—–-]*[\p{Lu}\p{N}]/u.test(text.trim());
   let prevLineEndedSentence = false;
 
   for (let p = 0; p < pageLines.length; p++) {
+    pdfPageStarts.push(words.length);
     const lines = pageLines[p];
     for (let li = 0; li < lines.length; li++) {
       const line = lines[li];
@@ -155,6 +169,8 @@ export async function parsePdf(
 
       const cleaned = line.text.replace(/\s+/g, " ").trim();
       if (!cleaned) continue;
+
+      lineIndex.push({ text: cleaned, wordStart: words.length });
 
       if (
         prevLineEndedSentence &&
@@ -172,6 +188,18 @@ export async function parsePdf(
     if (onProgress) onProgress(0.9 + ((p + 1) / pageLines.length) * 0.1);
   }
 
+  // Detección híbrida del índice: outline embebido → heurística por líneas.
+  let rawSections: BookSection[] = [];
+  try {
+    rawSections = await buildSectionsFromOutline(pdf, pdfPageStarts);
+  } catch {
+    rawSections = [];
+  }
+  if (rawSections.length === 0) {
+    rawSections = detectSectionsFromLines(lineIndex);
+  }
+  const sections = normalizeSections(words.length, rawSections);
+
   if (onProgress) onProgress(1);
 
   return {
@@ -181,5 +209,7 @@ export async function parsePdf(
     paraStarts,
     totalPages,
     wordsPerPage: words.length / Math.max(totalPages, 1),
+    sections,
+    pdfPageStarts,
   };
 }
