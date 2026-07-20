@@ -45,16 +45,6 @@ import type {
   BookSection,
 } from "@/types";
 
-/** Perceived luminance of a hex colour (0–1). */
-function isDarkColor(hex: string): boolean {
-  const m = hex.replace("#", "");
-  if (m.length < 6) return true;
-  const r = parseInt(m.slice(0, 2), 16) / 255;
-  const g = parseInt(m.slice(2, 4), 16) / 255;
-  const b = parseInt(m.slice(4, 6), 16) / 255;
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.5;
-}
-
 interface ReaderScreenProps {
   meta: BookMeta;
   words: string[];
@@ -316,20 +306,15 @@ export function ReaderScreen({
     }
   }, [question, qCardSaved, meta.id]);
 
-  const bgDark = isDarkColor(settings.backgroundColor);
-  const controlSurface = bgDark
-    ? "bg-black/40 backdrop-blur"
-    : "bg-white/50 backdrop-blur";
-
   return (
     <div
       ref={stageRef}
       className="reader-stage relative flex h-dvh w-screen flex-col overflow-hidden"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      {/* Top bar */}
-      <div className="safe-top safe-x flex items-center justify-between pb-3">
-        <div className="flex items-center gap-1">
+      {/* Top bar — solid light surface (Focus-Blue mockup) */}
+      <div className="safe-top safe-x flex items-center justify-between gap-3 border-b border-[#c3c6d7] bg-[#faf8ff] pb-3">
+        <div className="flex min-w-0 items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
@@ -337,16 +322,26 @@ export function ReaderScreen({
               void engine.flush();
               router.push("/");
             }}
-            className={cn(
-              "bg-transparent",
-              bgDark
-                ? "text-white/70 hover:bg-white/10 hover:text-white"
-                : "text-black/60 hover:bg-black/10 hover:text-black"
-            )}
+            className="bg-transparent text-[#004ac6] hover:bg-[#eaedff] hover:text-[#004ac6]"
             aria-label="Volver"
           >
             <ArrowLeft />
           </Button>
+          <div className="flex min-w-0 flex-col">
+            <h1
+              className="truncate text-lg font-bold leading-tight text-[#004ac6]"
+              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+            >
+              {meta.title}
+            </h1>
+            {meta.author && (
+              <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-[#434655]">
+                {meta.author}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
           {sections && sections.length > 0 && (
             <ChapterNav
               sections={sections}
@@ -354,21 +349,17 @@ export function ReaderScreen({
               currentWord={engine.index}
               wpm={settings.speed}
               onSeek={engine.seekTo}
-              dark={bgDark}
+              dark={false}
             />
           )}
+          <button
+            onClick={openSummary}
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-[#004ac6] transition-colors hover:bg-[#eaedff]"
+          >
+            <Sparkles className="size-4" />
+            <span className="hidden sm:inline">Resumen del capítulo</span>
+          </button>
         </div>
-        <button
-          onClick={openSummary}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors",
-            bgDark
-              ? "text-white/70 hover:bg-white/10 hover:text-white"
-              : "text-black/60 hover:bg-black/10 hover:text-black"
-          )}
-        >
-          <Sparkles className="size-4" /> Resumen del capítulo
-        </button>
       </div>
 
       {/* Reading stage — the flashing word. */}
@@ -438,8 +429,8 @@ export function ReaderScreen({
         )}
       </div>
 
-      {/* Bottom controls + progress */}
-      <div className={cn("safe-x safe-bottom space-y-4 pt-3", controlSurface)}>
+      {/* Bottom controls + progress — solid light surface (Focus-Blue mockup) */}
+      <div className="safe-x safe-bottom space-y-4 border-t border-[#c3c6d7] bg-[#faf8ff] pt-3">
         <ProgressBar
           title={meta.title}
           index={engine.index}
@@ -448,6 +439,7 @@ export function ReaderScreen({
           totalPages={meta.totalPages}
           speed={settings.speed}
           onSeek={engine.seekTo}
+          light
         />
         <Controls
           isPlaying={engine.isPlaying}

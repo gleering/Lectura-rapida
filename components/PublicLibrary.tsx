@@ -18,8 +18,6 @@ import {
   type PublicBook,
 } from "@/lib/publicLibrary";
 import { listBooks } from "@/lib/storage";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { Paywall } from "@/components/Paywall";
 import { MEMBERSHIP_ENABLED } from "@/lib/features";
 import { formatNumber } from "@/lib/utils";
@@ -80,98 +78,91 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
   if (!configured) return null;
 
   return (
-    <section className="mb-10">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-xl font-bold">
-          <Library className="size-5" /> Biblioteca pública
-        </h2>
-        <div className="flex items-center gap-2">
+    <section>
+      {(isAdmin || user) && (
+        <div className="mb-4 flex items-center justify-end gap-2">
           {isAdmin && (
             <Link
               href="/admin"
-              className={buttonVariants({ variant: "outline", size: "sm" })}
+              className="flex items-center gap-1.5 rounded-lg border border-[#c3c6d7] px-3 py-1.5 text-sm font-medium text-[#004ac6] transition-colors hover:bg-[#eaedff]"
             >
               <ShieldCheck className="size-4" /> Admin
             </Link>
           )}
-          {user ? (
-            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+          {user && (
+            <button
+              onClick={() => signOut()}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#eaedff]"
+            >
               Salir
-            </Button>
-          ) : null}
+            </button>
+          )}
         </div>
-      </div>
+      )}
 
       {!user ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-            <Library className="size-8" />
-            <p>Inicia sesión para ver el catálogo compartido de libros.</p>
-            <Link
-              href="/login?next=/library"
-              className={buttonVariants({ size: "sm" })}
-            >
-              <LogIn className="size-4" /> Iniciar sesión
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#c3c6d7] py-12 text-center text-[#434655]">
+          <Library className="size-8 text-[#004ac6]/40" />
+          <p>Inicia sesión para ver el catálogo compartido de libros.</p>
+          <Link
+            href="/login?next=/library"
+            className="flex items-center gap-1.5 rounded-lg bg-[#004ac6] px-4 py-2 text-sm font-bold text-white transition-transform active:scale-95"
+          >
+            <LogIn className="size-4" /> Iniciar sesión
+          </Link>
+        </div>
       ) : !canAccess ? (
         <Paywall feature="La biblioteca pública" />
       ) : loading ? (
-        <p className="text-sm text-muted-foreground">Cargando catálogo…</p>
+        <p className="text-sm text-[#434655]">Cargando catálogo…</p>
       ) : error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-[#ba1a1a]">{error}</p>
       ) : books.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Todavía no hay libros públicos.
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-dashed border-[#c3c6d7] py-12 text-center text-[#434655]">
+          Todavía no hay libros públicos.
+        </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {books.map((b) => {
             const imported = localIds.has(`pub_${b.id}`);
             return (
-              <Card key={b.id}>
-                <CardContent className="flex items-center justify-between gap-4 p-5">
-                  <div className="flex min-w-0 items-center gap-4">
-                    {b.cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={b.cover}
-                        alt={`Portada de ${b.title}`}
-                        className="h-20 w-14 shrink-0 rounded object-cover shadow-sm"
-                      />
-                    ) : (
-                      <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded bg-secondary text-muted-foreground">
-                        <Library className="size-6" />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{b.title}</p>
-                      {b.author && (
-                        <p className="truncate text-sm text-muted-foreground">
-                          {b.author}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {formatNumber(b.totalWords)} palabras · {b.totalPages}{" "}
-                        pág.
-                      </p>
+              <div
+                key={b.id}
+                className="group overflow-hidden rounded-2xl border border-[#c3c6d7] bg-white"
+              >
+                <div className="relative aspect-[3/4] overflow-hidden bg-[#eaedff]">
+                  {b.cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={b.cover}
+                      alt={`Portada de ${b.title}`}
+                      className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex size-full items-center justify-center">
+                      <Library className="size-8 text-[#004ac6]/40" />
                     </div>
-                  </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <h4 className="line-clamp-1 text-sm font-bold text-[#131b2e]">
+                    {b.title}
+                  </h4>
+                  <p className="mb-3 line-clamp-1 text-[11px] text-[#434655]">
+                    {b.author || `${formatNumber(b.totalWords)} palabras`}
+                  </p>
                   {imported ? (
                     <Link
                       href={`/reader/pub_${b.id}`}
-                      className={buttonVariants({ size: "sm" })}
+                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#004ac6] py-2 text-xs font-bold text-white transition-transform active:scale-95"
                     >
-                      <Play className="size-4" /> Leer
+                      <Play className="size-4" fill="currentColor" /> Leer
                     </Link>
                   ) : (
-                    <Button
-                      size="sm"
+                    <button
                       onClick={() => importBook(b)}
                       disabled={busyId === b.id}
+                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#10B981] py-2 text-xs font-bold text-white transition-transform active:scale-95 disabled:opacity-60"
                     >
                       {busyId === b.id ? (
                         <Loader2 className="size-4 animate-spin" />
@@ -179,10 +170,10 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
                         <Download className="size-4" />
                       )}
                       Importar
-                    </Button>
+                    </button>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>

@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trash2, Play, BookOpen, Loader2 } from "lucide-react";
+import {
+  Trash2,
+  Play,
+  BookOpen,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { UploadButton } from "@/components/UploadButton";
 import { PublicLibrary } from "@/components/PublicLibrary";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { listBooks, deleteBook, getSummary } from "@/lib/storage";
-import { formatDuration, formatNumber } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { BookMeta } from "@/types";
 
 interface BookWithSummary extends BookMeta {
@@ -17,10 +21,13 @@ interface BookWithSummary extends BookMeta {
   loadingSummary?: boolean;
 }
 
+type Tab = "mine" | "public";
+
 export default function LibraryPage() {
   const [books, setBooks] = useState<BookWithSummary[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [expandedBook, setExpandedBook] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("mine");
 
   const refresh = () =>
     listBooks().then((b) => {
@@ -65,130 +72,201 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
       <AppNav />
-      <main className="mx-auto max-w-5xl px-4 py-8 pb-24 md:pb-8">
-        <PublicLibrary onImported={refresh} />
-
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Mis libros</h1>
-          <UploadButton label="Subir PDF" size="default" />
+      <main className="mx-auto max-w-[1280px] px-4 py-6 pb-28 md:pb-10">
+        {/* Header & Tabs */}
+        <div className="mb-8">
+          <h2
+            className="mb-6 text-[28px] font-bold tracking-tight text-[#131b2e]"
+            style={{ fontFamily: "var(--font-hanken, inherit)" }}
+          >
+            Mi Biblioteca
+          </h2>
+          <div className="flex border-b border-[#c3c6d7]">
+            <TabButton active={tab === "mine"} onClick={() => setTab("mine")}>
+              Mis Libros
+            </TabButton>
+            <TabButton active={tab === "public"} onClick={() => setTab("public")}>
+              Biblioteca Pública
+            </TabButton>
+          </div>
         </div>
 
-        {!loaded ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
-        ) : books.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-3 py-16 text-center text-muted-foreground">
-              <BookOpen className="size-8" />
-              <p>Tu biblioteca está vacía. Sube tu primer PDF.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3">
-            {books.map((b) => {
-              const pct =
-                b.totalWords > 0
-                  ? ((b.progressIndex + 1) / b.totalWords) * 100
-                  : 0;
-              const isExpanded = expandedBook === b.id;
-              return (
-                <Card key={b.id}>
-                  <CardContent className="flex flex-col gap-4 p-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                      {b.cover && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={b.cover}
-                          alt={`Portada de ${b.title}`}
-                          className="h-24 w-16 shrink-0 self-center rounded object-cover shadow-sm sm:self-start"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
+        {/* Mis Libros */}
+        {tab === "mine" && (
+          <section className="space-y-4">
+            {!loaded ? (
+              <p className="text-sm text-[#434655]">Cargando…</p>
+            ) : books.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#c3c6d7] py-16 text-center text-[#434655]">
+                <BookOpen className="size-8 text-[#004ac6]/40" />
+                <p>Tu biblioteca está vacía. Sube tu primer PDF.</p>
+                <UploadButton
+                  label="Subir PDF"
+                  className="rounded-xl bg-[#004ac6] px-6 py-3 text-white hover:bg-[#003ea8]"
+                />
+              </div>
+            ) : (
+              books.map((b) => {
+                const pct =
+                  b.totalWords > 0
+                    ? ((b.progressIndex + 1) / b.totalWords) * 100
+                    : 0;
+                const isExpanded = expandedBook === b.id;
+                return (
+                  <div
+                    key={b.id}
+                    className={cn(
+                      "overflow-hidden rounded-2xl border bg-white transition-all",
+                      isExpanded
+                        ? "border-[#004ac6]/20 shadow-sm ring-1 ring-[#004ac6]/5"
+                        : "border-[#c3c6d7] hover:border-[#004ac6]/30"
+                    )}
+                  >
+                    <div className="flex items-center gap-4 p-4">
+                      <div className="flex h-20 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#eaedff]">
+                        {b.cover ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={b.cover}
+                            alt={`Portada de ${b.title}`}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <BookOpen className="size-6 text-[#004ac6]/40" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-grow">
                         <div className="flex items-center gap-2">
-                          <p className="truncate font-medium">{b.title}</p>
+                          <h3 className="truncate text-sm font-bold text-[#131b2e]">
+                            {b.title}
+                          </h3>
                           {b.finished && (
-                            <span className="shrink-0 rounded-full bg-green-500/15 px-2 py-0.5 text-xs text-green-600 dark:text-green-400">
+                            <span className="shrink-0 rounded-full bg-[#6cf8bb]/50 px-2 py-0.5 text-[10px] font-bold text-[#00714d]">
                               Leído
                             </span>
                           )}
                         </div>
                         {b.author && (
-                          <p className="truncate text-sm text-muted-foreground">
+                          <p className="truncate text-xs text-[#434655]">
                             {b.author}
                           </p>
                         )}
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatNumber(b.totalWords)} palabras · {b.totalPages}{" "}
-                          pág. · {formatDuration(b.timeReadMs)} leído
-                        </p>
-                        <div className="mt-2 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-secondary">
-                          <div
-                            className="h-full bg-primary"
-                            style={{ width: `${pct}%` }}
-                          />
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="h-1.5 flex-grow overflow-hidden rounded-full bg-[#e2e7ff]">
+                            <div
+                              className="h-full rounded-full bg-[#006c49]"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-bold text-[#006c49]">
+                            {pct.toFixed(0)}%
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <Link
                           href={`/reader/${b.id}`}
-                          className={buttonVariants({ size: "sm" })}
+                          className="flex items-center gap-1.5 rounded-lg bg-[#004ac6] px-4 py-2 text-sm font-bold text-white transition-transform active:scale-95"
                         >
-                          <Play className="size-4" />
-                          {b.progressIndex > 0 && !b.finished
-                            ? "Continuar"
-                            : "Leer"}
+                          <Play className="size-4" fill="currentColor" />
+                          <span className="hidden sm:inline">
+                            {b.progressIndex > 0 && !b.finished
+                              ? "Continuar"
+                              : "Leer"}
+                          </span>
                         </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <button
                           onClick={() => toggleSummary(b.id)}
-                          className="text-xs"
+                          aria-label="Ver resumen IA"
+                          className={cn(
+                            "flex size-9 items-center justify-center rounded-lg transition-colors",
+                            isExpanded
+                              ? "bg-[#eaedff] text-[#004ac6]"
+                              : "text-[#434655] hover:bg-[#eaedff] hover:text-[#004ac6]"
+                          )}
                         >
-                          {isExpanded ? "Ocultar" : "Resumen"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                          <Sparkles className="size-4" />
+                        </button>
+                        <button
                           onClick={() => remove(b.id)}
                           aria-label="Eliminar libro"
-                          className="text-muted-foreground hover:text-destructive"
+                          className="flex size-9 items-center justify-center rounded-lg text-[#434655] transition-colors hover:bg-[#ffdad6] hover:text-[#ba1a1a]"
                         >
                           <Trash2 className="size-4" />
-                        </Button>
+                        </button>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="border-t pt-4">
+                      <div className="mx-4 mb-4 rounded-xl border-l-4 border-[#004ac6] bg-[#f2f3ff] p-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <Sparkles className="size-4 text-[#004ac6]" />
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#004ac6]">
+                            Resumen IA
+                          </span>
+                        </div>
                         {b.loadingSummary ? (
-                          <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+                          <div className="flex items-center gap-2 text-[#434655]">
                             <Loader2 className="size-4 animate-spin" />
                             <p className="text-sm">Generando resumen…</p>
                           </div>
                         ) : b.summaryText ? (
-                          <div className="space-y-2">
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Resumen IA:
-                            </p>
-                            <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                              {b.summaryText}
-                            </p>
-                          </div>
+                          <p className="whitespace-pre-wrap text-sm italic leading-relaxed text-[#434655]">
+                            {b.summaryText}
+                          </p>
                         ) : (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-[#434655]">
                             No hay resumen disponible.
                           </p>
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })
+            )}
+          </section>
         )}
+
+        {/* Biblioteca Pública */}
+        {tab === "public" && <PublicLibrary onImported={refresh} />}
       </main>
+
+      {/* FAB: Subir PDF (solo en Mis Libros) */}
+      {tab === "mine" && books.length > 0 && (
+        <UploadButton
+          label="Subir PDF"
+          className="fixed bottom-24 right-6 z-30 h-14 rounded-full bg-[#004ac6] px-6 text-white shadow-lg shadow-[#004ac6]/20 hover:bg-[#003ea8] md:bottom-8"
+        />
+      )}
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "relative px-6 py-3 text-sm font-medium transition-all",
+        active
+          ? "font-bold text-[#004ac6] after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:rounded-t after:bg-[#004ac6]"
+          : "text-[#434655] hover:text-[#004ac6]"
+      )}
+    >
+      {children}
+    </button>
   );
 }

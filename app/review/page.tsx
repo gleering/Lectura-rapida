@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Brain, Sparkles, Loader2, CalendarClock, Plus } from "lucide-react";
+import { Sparkles, Loader2, Plus, Play, Timer } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { ReviewSession } from "@/components/ReviewSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   listBooks,
   getBookContent,
@@ -85,10 +83,11 @@ export default function ReviewPage() {
   };
 
   const queue = summarizeQueue(allCards);
+  const estMinutes = Math.max(1, Math.round((dueCards.length * 30) / 60));
 
   if (sessionActive) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
         <AppNav />
         <main className="mx-auto max-w-2xl px-4 py-8 pb-24 md:pb-8">
           <ReviewSession
@@ -104,111 +103,119 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
       <AppNav />
       <main className="mx-auto max-w-3xl px-4 py-8 pb-24 md:pb-8">
-        <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Brain className="size-6 text-primary" />
-            Repaso Espaciado
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Recupera de memoria en el momento justo antes de olvidar. Así el
-            conocimiento pasa a tu memoria de largo plazo.
-          </p>
-        </div>
-
         {!loaded ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <div className="flex justify-center py-20 text-[#434655]">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
         ) : (
-          <div className="space-y-6">
-            {/* Cola de hoy */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CalendarClock className="size-5" />
-                  Para hoy
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-bold">{queue.due}</p>
-                    <p className="text-xs text-muted-foreground">Pendientes</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{queue.learning}</p>
-                    <p className="text-xs text-muted-foreground">Aprendiendo</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{queue.total}</p>
-                    <p className="text-xs text-muted-foreground">Totales</p>
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  disabled={dueCards.length === 0}
-                  onClick={() => setSessionActive(true)}
-                >
-                  {dueCards.length > 0
-                    ? `Comenzar repaso (${dueCards.length})`
-                    : "Nada por repasar ahora"}
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="space-y-8">
+            {/* Encabezado */}
+            <div className="text-center">
+              <h1
+                className="text-3xl font-bold tracking-tight"
+                style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              >
+                Cola de Repaso
+              </h1>
+              <p className="mt-2 text-[#434655]">
+                Mantén tu curva de olvido bajo control.
+              </p>
+            </div>
+
+            {/* Bento de estadísticas */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5 text-center">
+                <p className="text-3xl font-bold text-[#004ac6]">{queue.due}</p>
+                <p className="mt-1 text-xs font-medium text-[#434655]">
+                  Pendientes
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5 text-center">
+                <p className="text-3xl font-bold text-[#006c49]">
+                  {queue.learning}
+                </p>
+                <p className="mt-1 text-xs font-medium text-[#434655]">
+                  Aprendiendo
+                </p>
+              </div>
+              <div className="rounded-2xl border-2 border-[#2563eb] bg-[#e2e7ff] p-5 text-center">
+                <p className="text-3xl font-bold text-[#131b2e]">{queue.total}</p>
+                <p className="mt-1 text-xs font-medium text-[#434655]">Totales</p>
+              </div>
+            </div>
+
+            {/* CTA principal */}
+            <div className="flex flex-col items-center gap-3 pt-2">
+              <button
+                disabled={dueCards.length === 0}
+                onClick={() => setSessionActive(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-[#004ac6] px-12 py-5 text-lg font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#c3c6d7] disabled:text-[#434655]"
+              >
+                <Play className="size-5 fill-current" />
+                {dueCards.length > 0
+                  ? `Comenzar repaso (${dueCards.length})`
+                  : "Nada por repasar ahora"}
+              </button>
+              {dueCards.length > 0 && (
+                <p className="flex items-center gap-1.5 text-sm text-[#434655]">
+                  <Timer className="size-4" />
+                  Tiempo estimado: {estMinutes} minuto
+                  {estMinutes === 1 ? "" : "s"}
+                </p>
+              )}
+            </div>
 
             {/* Generar tarjetas por libro */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="size-5" />
-                  Crear tarjetas desde tus libros
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+            <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5">
+              <h2 className="mb-4 flex items-center gap-2 text-base font-semibold">
+                <Sparkles className="size-5 text-[#784b00]" />
+                Crear tarjetas desde tus libros
+              </h2>
+              <div className="space-y-3">
                 {books.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-[#434655]">
                     Sube un libro en la Biblioteca para generar tarjetas de repaso.
                   </p>
                 ) : (
                   books.map((book) => (
                     <div
                       key={book.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-[#c3c6d7] bg-[#f2f3ff] p-3"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
+                        <p className="truncate text-sm font-medium text-[#131b2e]">
                           {book.title}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-[#434655]">
                           {cardCountByBook[book.id] || 0} tarjeta
                           {(cardCountByBook[book.id] || 0) === 1 ? "" : "s"}
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         disabled={generatingBook !== null}
                         onClick={() => handleGenerate(book)}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#004ac6] px-4 py-2 text-sm font-medium text-[#004ac6] transition hover:bg-[#eaedff] disabled:opacity-50"
                       >
                         {generatingBook === book.id ? (
                           <>
-                            <Loader2 className="mr-1 size-4 animate-spin" />
+                            <Loader2 className="size-4 animate-spin" />
                             Generando…
                           </>
                         ) : (
                           <>
-                            <Plus className="mr-1 size-4" />
+                            <Plus className="size-4" />
                             Generar
                           </>
                         )}
-                      </Button>
+                      </button>
                     </div>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
       </main>

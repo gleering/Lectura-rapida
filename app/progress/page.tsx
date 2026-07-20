@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { LearningDashboard } from "@/components/LearningDashboard";
-import { Card, CardContent } from "@/components/ui/card";
 import { getAllReviewCards, getAllConceptLinks } from "@/lib/storage";
 import {
   computeLearningMetrics,
@@ -29,15 +28,17 @@ export default function ProgressPage() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
       <AppNav />
-      <main className="mx-auto max-w-3xl px-4 py-8 pb-24 md:pb-8">
+      <main className="mx-auto max-w-4xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <TrendingUp className="size-6 text-primary" />
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{ fontFamily: "var(--font-hanken, inherit)" }}
+          >
             Progreso
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-[#434655]">
             No medimos cuánto lees ni a qué velocidad, sino cuánto comprendes y
             retienes de verdad. Lo que se mide se optimiza: aquí verás tu
             conocimiento consolidándose en memoria de largo plazo.
@@ -45,17 +46,19 @@ export default function ProgressPage() {
         </div>
 
         {!loaded ? (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
+          <div className="flex justify-center py-20 text-[#434655]">
+            <Loader2 className="size-6 animate-spin" />
+          </div>
         ) : !metrics || metrics.totalConcepts === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-3 py-16 text-center text-muted-foreground">
-              <Sparkles className="size-8" />
-              <p>
+          <div className="rounded-2xl border border-dashed border-[#c3c6d7] bg-white">
+            <div className="flex flex-col items-center gap-3 px-4 py-16 text-center text-[#434655]">
+              <Sparkles className="size-8 text-[#784b00]" />
+              <p className="max-w-sm">
                 Aún no tienes conceptos que medir. Genera tarjetas de repaso o
                 usa el Tutor para empezar a construir tu conocimiento.
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
           <LearningDashboard metrics={metrics} goals={goals} />
         )}
