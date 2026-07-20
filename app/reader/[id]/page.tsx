@@ -51,13 +51,24 @@ export default function ReaderPage() {
 
       // Índice: usar el guardado, o detectarlo bajo demanda (libros previos)
       // a partir del texto y cachearlo para la próxima vez.
+      //
+      // Los libros nuevos traen `pdfPageStarts` (índice por outline/líneas, buena
+      // señal): esos NO se re-detectan. Los libros viejos (sin PDF) usan la
+      // heurística por-palabras; se re-detecta si mejoró su versión, para que la
+      // mejora llegue a libros ya abiertos con el algoritmo anterior.
+      const WORD_DETECT_V = 2;
+      const isOldBook = !c.pdfPageStarts || c.pdfPageStarts.length === 0;
       let secs = c.sections;
-      if (!secs || secs.length === 0) {
+      if (
+        !secs ||
+        secs.length === 0 ||
+        (isOldBook && (c.sectionsWordV ?? 0) < WORD_DETECT_V)
+      ) {
         secs = normalizeSections(
           c.words.length,
           detectSectionsFromWords(c.words)
         );
-        void updateBookSections(params.id, secs);
+        void updateBookSections(params.id, secs, WORD_DETECT_V);
       }
       setSections(secs);
       setStatus("ready");

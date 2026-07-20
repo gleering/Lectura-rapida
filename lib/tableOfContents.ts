@@ -184,8 +184,12 @@ function capitalize(w: string): string {
 
 const STANDALONE_KW =
   /^(introduccion|prologo|prefacio|epilogo|conclusion|bibliografia|referencias)$/;
-const NUMBERED_KW = /^(capitulo|parte|anexo|apendice)$/;
+const NUMBERED_KW = /^(capitulo|parte|seccion|anexo|apendice|leccion|acto|canto|tomo|libro)$/;
 const NUMERAL_TOKEN = /^(?:[ivxlcdm]{1,7}|\d{1,3})$/i;
+/** Números escritos en español (cardinales y ordinales), sin acentos/caso.
+ *  Permite detectar "Capítulo Primero", "Parte Segunda", "Capítulo Uno". */
+const SPELLED_NUMBER =
+  /^(?:primer[oa]?|segund[oa]|tercer[oa]?|cuart[oa]|quint[oa]|sext[oa]|septim[oa]|octav[oa]|noven[oa]|decim[oa]|undecim[oa]|duodecim[oa]|un[oa]|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciseis|diecisiete|dieciocho|diecinueve|veinte)$/;
 
 /** Detecta encabezados con palabra clave capitalizada en el flujo de palabras.
  *  Más limitada que la detección por líneas o el índice embebido, pero sirve
@@ -207,10 +211,14 @@ export function detectSectionsFromWords(words: string[]): BookSection[] {
       title = capitalize(stripPunct(raw));
     } else if (NUMBERED_KW.test(w)) {
       const next = words[i + 1] ? stripPunct(words[i + 1]) : "";
-      if (NUMERAL_TOKEN.test(next)) {
+      const isNumeral = NUMERAL_TOKEN.test(next);
+      const isSpelled = SPELLED_NUMBER.test(normalizeForSearch(next));
+      if (isNumeral || isSpelled) {
         isHeading = true;
-        level = w === "parte" ? 0 : 1;
-        title = `${capitalize(stripPunct(raw))} ${next}`;
+        level = w === "parte" || w === "tomo" || w === "libro" ? 0 : 1;
+        // Numerales (IV, 12) se preservan tal cual; los escritos se capitalizan.
+        const num = isNumeral ? next : capitalize(next);
+        title = `${capitalize(stripPunct(raw))} ${num}`;
       }
     }
 

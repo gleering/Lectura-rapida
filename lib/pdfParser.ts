@@ -34,6 +34,8 @@ export interface ParsedBook {
   sections: BookSection[];
   /** Palabra donde arranca cada página física del PDF. */
   pdfPageStarts: number[];
+  /** Miniatura de la portada (dataURL JPEG) renderizada de la 1ª página. */
+  cover?: string;
 }
 
 interface Line {
@@ -80,6 +82,30 @@ function itemsToLines(items: { str: string; transform: number[] }[]): Line[] {
   return lines;
 }
 
+/** Renderiza la 1ª página a una miniatura JPEG (dataURL). Devuelve undefined si
+ *  no hay DOM (SSR) o si el render falla; nunca rompe la carga del libro. */
+async function renderCover(
+  pdf: Awaited<ReturnType<typeof pdfjsLib.getDocument>["promise"]>
+): Promise<string | undefined> {
+  if (typeof document === "undefined") return undefined;
+  try {
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const targetWidth = 240; // miniatura liviana para la tarjeta de biblioteca
+    const viewport = page.getViewport({ scale: targetWidth / base.width });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return undefined;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    page.cleanup();
+    return canvas.toDataURL("image/jpeg", 0.7);
+  } catch {
+    return undefined;
+  }
+}
+
 export async function parsePdf(
   file: File | ArrayBuffer,
   onProgress?: (ratio: number) => void
@@ -88,6 +114,9 @@ export async function parsePdf(
   const loadingTask = pdfjsLib.getDocument({ data });
   const pdf = await loadingTask.promise;
   const totalPages = pdf.numPages;
+
+  // Miniatura de portada (best-effort, no bloquea si falla).
+  const cover = await renderCover(pdf);
 
   // First pass metadata: title/author from the PDF info dict.
   let title = "Documento sin título";
@@ -211,5 +240,6 @@ export async function parsePdf(
     wordsPerPage: words.length / Math.max(totalPages, 1),
     sections,
     pdfPageStarts,
+    cover,
   };
 }

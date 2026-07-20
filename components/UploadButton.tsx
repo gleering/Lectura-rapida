@@ -68,6 +68,7 @@ export function UploadButton({
           finished: false,
           wordsPerPage: parsed.wordsPerPage,
           summaryLoading: true,
+          cover: parsed.cover,
         };
         await saveBook(
           meta,

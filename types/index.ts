@@ -69,6 +69,8 @@ export interface BookMeta {
   summary?: string;
   /** Whether summary generation is in progress. */
   summaryLoading?: boolean;
+  /** Miniatura de la portada (dataURL JPEG) para la tarjeta de biblioteca. */
+  cover?: string;
 }
 
 export interface BookContent {
@@ -87,6 +89,10 @@ export interface BookContent {
    *  índice embebido (getOutline). No confundir con la paginación de lectura de
    *  PageReader. */
   pdfPageStarts?: number[];
+  /** Versión de la heurística por-palabras usada al detectar secciones bajo
+   *  demanda (libros previos sin PDF). Permite re-detectar cuando mejora el
+   *  algoritmo, sin pisar las secciones de libros nuevos (que traen outline). */
+  sectionsWordV?: number;
 }
 
 /** Categoría de una sección del índice, para ícono y agrupación en la UI. */

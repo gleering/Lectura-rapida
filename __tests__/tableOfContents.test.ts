@@ -173,6 +173,22 @@ describe("detectSectionsFromWords", () => {
     const words = "esto se explica en el capítulo siguiente sin mayúscula".split(" ");
     expect(detectSectionsFromWords(words)).toHaveLength(0);
   });
+
+  it("detecta capítulos con número escrito (ordinal y cardinal)", () => {
+    const words =
+      "Capítulo Primero El inicio de todo esto que empieza aquí . Capítulo Dos La continuación de la historia larga . Parte Segunda Otra mitad del relato completo .".split(
+        " "
+      );
+    const titles = detectSectionsFromWords(words).map((s) => s.title);
+    expect(titles).toContain("Capítulo Primero");
+    expect(titles).toContain("Capítulo Dos");
+    expect(titles).toContain("Parte Segunda");
+  });
+
+  it("preserva numerales romanos sin capitalizar mal", () => {
+    const words = "Capítulo IV El cuarto tramo de la obra completa aquí .".split(" ");
+    expect(detectSectionsFromWords(words)[0].title).toBe("Capítulo IV");
+  });
 });
 
 describe("detectSectionsFromLines", () => {

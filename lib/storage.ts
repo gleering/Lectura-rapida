@@ -117,15 +117,18 @@ export async function getBookContent(
   return db.get("content", id);
 }
 
-/** Cachea las secciones detectadas bajo demanda (libros previos sin índice). */
+/** Cachea las secciones detectadas bajo demanda (libros previos sin índice).
+ *  `wordDetectV` marca la versión de la heurística por-palabras, para poder
+ *  re-detectar en el futuro sin pisar libros con índice de outline. */
 export async function updateBookSections(
   id: string,
-  sections: BookSection[]
+  sections: BookSection[],
+  wordDetectV?: number
 ): Promise<void> {
   const db = await getDb();
   const content = await db.get("content", id);
   if (!content) return;
-  await db.put("content", { ...content, sections });
+  await db.put("content", { ...content, sections, sectionsWordV: wordDetectV });
 }
 
 export async function listBooks(): Promise<BookMeta[]> {

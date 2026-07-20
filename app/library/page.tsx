@@ -93,6 +93,14 @@ export default function LibraryPage() {
                 <Card key={b.id}>
                   <CardContent className="flex flex-col gap-4 p-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                      {b.cover && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={b.cover}
+                          alt={`Portada de ${b.title}`}
+                          className="h-24 w-16 shrink-0 self-center rounded object-cover shadow-sm sm:self-start"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="truncate font-medium">{b.title}</p>
