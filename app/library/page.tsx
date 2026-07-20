@@ -14,6 +14,7 @@ import { AppNav } from "@/components/AppNav";
 import { UploadButton } from "@/components/UploadButton";
 import { PublicLibrary } from "@/components/PublicLibrary";
 import { EmptyState } from "@/components/EmptyState";
+import { BookCover } from "@/components/BookCover";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { listBooks, deleteBook, getSummary } from "@/lib/storage";
@@ -40,6 +41,14 @@ export default function LibraryPage() {
   const [loaded, setLoaded] = useState(false);
   const [expandedBook, setExpandedBook] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("mine");
+
+  // Permite abrir directo el catálogo público con /library?tab=public
+  // (usado por el onboarding). Se lee del cliente para no forzar Suspense.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "public") {
+      setTab("public");
+    }
+  }, []);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [pendingDelete, setPendingDelete] = useState<BookMeta | null>(null);
@@ -203,19 +212,8 @@ export default function LibraryPage() {
                     )}
                   >
                     <div className="flex items-center gap-4 p-4">
-                      <div className="flex h-20 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary">
-                        {b.cover ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={b.cover}
-                            alt={`Portada de ${b.title}`}
-                            loading="lazy"
-                            decoding="async"
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <BookOpen className="size-6 text-primary/40" />
-                        )}
+                      <div className="h-20 w-16 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                        <BookCover title={b.title} author={b.author} cover={b.cover} />
                       </div>
 
                       <div className="min-w-0 flex-grow">

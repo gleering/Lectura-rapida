@@ -22,6 +22,7 @@ import { Landing } from "@/components/Landing";
 import { Onboarding } from "@/components/Onboarding";
 import { StatTile } from "@/components/StatTile";
 import { EmptyState } from "@/components/EmptyState";
+import { BookCover } from "@/components/BookCover";
 import { useAuth } from "@/lib/auth";
 import { UploadButton } from "@/components/UploadButton";
 import {
@@ -241,18 +242,11 @@ export default function HomePage() {
                 </h3>
                 <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm sm:flex-row">
                   <div className="relative h-48 w-full shrink-0 bg-secondary sm:h-auto sm:w-40">
-                    {continueBook.cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={continueBook.cover}
-                        alt={`Portada de ${continueBook.title}`}
-                        className="absolute inset-0 size-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center">
-                        <BookOpen className="size-10 text-primary/40" />
-                      </div>
-                    )}
+                    <BookCover
+                      title={continueBook.title}
+                      author={continueBook.author}
+                      cover={continueBook.cover}
+                    />
                     <div className="absolute left-3 top-3 rounded-full bg-success px-2 py-0.5 text-[10px] font-bold text-success-foreground">
                       ACTIVO
                     </div>
@@ -350,18 +344,7 @@ export default function HomePage() {
                 return (
                   <Link key={b.id} href={`/reader/${b.id}`} className="group space-y-3">
                     <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border bg-secondary shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
-                      {b.cover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={b.cover}
-                          alt={`Portada de ${b.title}`}
-                          className="absolute inset-0 size-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center">
-                          <BookOpen className="size-8 text-primary/40" />
-                        </div>
-                      )}
+                      <BookCover title={b.title} author={b.author} cover={b.cover} />
                       <div className="absolute bottom-0 left-0 h-1 w-full bg-accent">
                         <div
                           className={cn(

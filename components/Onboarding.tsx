@@ -1,13 +1,15 @@
 "use client";
 
-import { Upload, BookOpenCheck, Brain, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Upload, BookOpenCheck, Brain, ArrowRight, Library } from "lucide-react";
 import { UploadButton } from "@/components/UploadButton";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 const STEPS = [
   {
     icon: Upload,
-    title: "Sube tu primer libro",
-    desc: "Un PDF o un archivo de texto. Se guarda en este dispositivo y funciona sin conexión.",
+    title: "Elige tu primer libro",
+    desc: "Sube un PDF o texto propio, o descarga uno de la biblioteca pública. Todo queda en este dispositivo y funciona sin conexión.",
   },
   {
     icon: BookOpenCheck,
@@ -23,8 +25,8 @@ const STEPS = [
 
 /**
  * Bienvenida para usuarios sin libros. Explica la promesa del producto
- * (rehabilitar la atención → comprender y retener) y hace del primer libro el
- * único paso obligatorio; el resto ocurre naturalmente al leer.
+ * (rehabilitar la atención → comprender y retener) y ofrece los dos caminos
+ * para empezar: subir un libro propio o tomar uno de la biblioteca pública.
  */
 export function Onboarding() {
   return (
@@ -63,12 +65,25 @@ export function Onboarding() {
       </div>
 
       <div className="flex flex-col items-center gap-3 border-t border-border px-6 py-6 text-center">
-        <UploadButton
-          label="Subir mi primer libro"
-          className="rounded-xl bg-primary px-8 py-3 text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
-        />
+        <div className="flex flex-col items-center gap-3 sm:flex-row">
+          <UploadButton
+            label="Subir mi primer libro"
+            className="rounded-xl bg-primary px-8 py-3 text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
+          />
+          {isSupabaseConfigured && (
+            <Link
+              href="/library?tab=public"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-card px-8 py-3 font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <Library className="size-4 text-primary" />
+              Explorar biblioteca pública
+            </Link>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
-          Formatos: PDF, TXT y Markdown · Todo se procesa en tu dispositivo
+          {isSupabaseConfigured
+            ? "¿No tienes un PDF a mano? Descarga un libro de nuestro catálogo y empieza en segundos."
+            : "Formatos: PDF, TXT y Markdown · Todo se procesa en tu dispositivo"}
         </p>
       </div>
     </section>

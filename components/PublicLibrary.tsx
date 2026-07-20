@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { BookCover } from "@/components/BookCover";
 import {
   listPublicBooks,
   importToDevice,
@@ -130,19 +131,8 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
                 key={b.id}
                 className="group overflow-hidden rounded-2xl border border-border bg-card"
               >
-                <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
-                  {b.cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={b.cover}
-                      alt={`Portada de ${b.title}`}
-                      className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex size-full items-center justify-center">
-                      <Library className="size-8 text-primary/40" />
-                    </div>
-                  )}
+                <div className="relative aspect-[3/4] overflow-hidden bg-secondary transition-transform duration-500 group-hover:scale-105">
+                  <BookCover title={b.title} author={b.author} cover={b.cover} />
                 </div>
                 <div className="p-3">
                   <h4 className="line-clamp-1 text-sm font-bold text-foreground">

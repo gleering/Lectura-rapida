@@ -64,29 +64,32 @@ export function AppNav() {
     <>
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-bold">
+        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-2 px-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2 font-bold">
             <BookOpen className="size-5" />
-            <span>ReadFlow AI</span>
+            <span className="whitespace-nowrap">ReadFlow AI</span>
           </Link>
 
-          {/* Desktop nav — full set */}
-          <nav className="hidden items-center gap-1 md:flex">
+          {/* Desktop nav — full set. Las etiquetas solo aparecen cuando hay
+              ancho de sobra (xl); en laptops medianas se muestran solo íconos
+              para que ningún ítem (p. ej. "Ajustes") quede cortado. */}
+          <nav className="hidden min-w-0 items-center gap-0.5 md:flex xl:gap-1">
             {links.map(({ href, label, icon: Icon }) => {
               const active = isActive(href);
               return (
                 <Link
                   key={href}
                   href={href}
+                  title={label}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors xl:px-3",
                     active
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:bg-secondary/60"
                   )}
                 >
-                  <Icon className="size-4" />
-                  <span className="hidden lg:inline">{label}</span>
+                  <Icon className="size-4 shrink-0" />
+                  <span className="hidden xl:inline">{label}</span>
                 </Link>
               );
             })}
