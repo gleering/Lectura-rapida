@@ -235,7 +235,7 @@ export function PageReader({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="safe-top safe-x flex items-center justify-between pb-3">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -307,14 +307,14 @@ export function PageReader({
       <div className="relative flex flex-1 overflow-hidden">
         {/* Zona toque anterior */}
         <button
-          className="absolute left-0 top-0 z-10 h-full w-1/6"
+          className="absolute left-0 top-0 z-10 h-full w-1/4 sm:w-1/6"
           onClick={goPrev}
           aria-label="Página anterior"
           tabIndex={-1}
         />
         {/* Zona toque siguiente */}
         <button
-          className="absolute right-0 top-0 z-10 h-full w-1/6"
+          className="absolute right-0 top-0 z-10 h-full w-1/4 sm:w-1/6"
           onClick={goNext}
           aria-label="Página siguiente"
           tabIndex={-1}
@@ -361,7 +361,7 @@ export function PageReader({
       </div>
 
       {/* Bottom controls */}
-      <div className="space-y-3 bg-black/60 px-4 pb-5 pt-3 backdrop-blur">
+      <div className="safe-x safe-bottom space-y-3 bg-black/60 pt-3 backdrop-blur">
         {/* Progreso por páginas */}
         <div className="space-y-1.5 text-white/70">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">

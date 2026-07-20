@@ -206,7 +206,7 @@ export function PacerReader({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="safe-top safe-x flex items-center justify-between pb-3">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -283,7 +283,7 @@ export function PacerReader({
       </div>
 
       {/* Bottom controls */}
-      <div className="space-y-4 bg-black/60 px-4 pb-5 pt-3 backdrop-blur">
+      <div className="safe-x safe-bottom space-y-4 bg-black/60 pt-3 backdrop-blur">
         <ProgressBar
           title={meta.title}
           index={index}

@@ -121,7 +121,7 @@ export function Controls({
               key={m}
               onClick={() => onMode(m)}
               className={cn(
-                "px-3 py-2 text-sm font-medium transition-colors",
+                "min-h-[44px] min-w-[44px] px-3 py-2 text-sm font-medium transition-colors",
                 mode === m
                   ? "bg-white text-black"
                   : "bg-white/5 text-white/70 hover:bg-white/10"
@@ -138,7 +138,7 @@ export function Controls({
         <button
           onClick={() => onToggleOrp(!orpEnabled)}
           className={cn(
-            "rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+            "min-h-[44px] rounded-md border px-3 py-2 text-sm font-medium transition-colors",
             orpEnabled
               ? "border-white/20 bg-white/10 text-white"
               : "border-white/20 bg-white/5 text-white/50 hover:bg-white/10"

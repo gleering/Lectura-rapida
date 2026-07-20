@@ -328,7 +328,7 @@ export function ReaderScreen({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="safe-top safe-x flex items-center justify-between pb-3">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -439,7 +439,7 @@ export function ReaderScreen({
       </div>
 
       {/* Bottom controls + progress */}
-      <div className={cn("space-y-4 px-4 pb-5 pt-3", controlSurface)}>
+      <div className={cn("safe-x safe-bottom space-y-4 pt-3", controlSurface)}>
         <ProgressBar
           title={meta.title}
           index={engine.index}

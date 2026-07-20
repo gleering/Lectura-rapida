@@ -77,3 +77,31 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Safe-area helpers — keep the reader chrome clear of the notch and the home
+   gesture bar on iOS/Android, while preserving a sensible base padding on
+   devices without insets (max() falls back to the first value). */
+@layer utilities {
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+  .safe-x {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Respect users who ask for less motion: neutralise transitions/animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -16,7 +16,7 @@ export function SpeedSelector({ speed, onChange }: SpeedSelectorProps) {
         value={speed}
         onChange={(e) => onChange(Number(e.target.value) as Speed)}
         aria-label="Velocidad de lectura"
-        className="w-[130px] bg-white/10 text-white border-white/20"
+        className="h-11 w-[130px] border-white/20 bg-white/10 text-white"
       >
         {SPEED_OPTIONS.map((s) => (
           <option key={s} value={s} className="text-black">

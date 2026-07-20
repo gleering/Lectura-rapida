@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   List,
   X,
@@ -64,6 +64,22 @@ export function ChapterNav({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+  // Con el panel abierto, bloquear el scroll del fondo (evita el "scroll
+  // fantasma" del reader detrás del índice) y cerrar con Escape.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   // start (palabra) -> {end} para pintar estado/duración por sección.
   const endByStart = useMemo(() => {
     const map = new Map<number, number>();
@@ -112,8 +128,8 @@ export function ChapterNav({
             aria-label="Cerrar índice"
             onClick={() => setOpen(false)}
           />
-          <div className="relative flex h-full w-full max-w-sm flex-col bg-background text-foreground shadow-xl">
-            <div className="flex items-center justify-between border-b px-4 py-3">
+          <div className="relative flex h-full w-[86vw] max-w-sm flex-col bg-background text-foreground shadow-xl">
+            <div className="safe-top flex items-center justify-between border-b px-4 pb-3">
               <h2 className="text-base font-semibold">Índice</h2>
               <button
                 onClick={() => setOpen(false)}
@@ -136,7 +152,7 @@ export function ChapterNav({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="safe-bottom flex-1 overflow-y-auto p-2">
               {!hasIndex ? (
                 <div className="p-4 text-sm text-muted-foreground">
                   <p>No se detectó un índice en este libro.</p>

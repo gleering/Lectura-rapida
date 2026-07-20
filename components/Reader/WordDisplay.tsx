@@ -27,7 +27,9 @@ export const WordDisplay = React.memo(function WordDisplay({
 }: WordDisplayProps) {
   const style: React.CSSProperties = {
     fontFamily: settings.fontFamily,
-    fontSize: settings.fontSize,
+    // La fuente elegida por el usuario, pero acotada al ancho del viewport para
+    // que una palabra larga nunca se salga ni se recorte en pantallas chicas.
+    fontSize: `min(${settings.fontSize}px, 13vw)`,
     color: settings.textColor,
     letterSpacing: `${settings.letterSpacing}em`,
     lineHeight: 1.1,
