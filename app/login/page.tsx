@@ -74,7 +74,7 @@ function LoginForm() {
         <CardContent className="space-y-6 p-6">
           <div className="flex flex-col items-center gap-2 text-center">
             <BookOpen className="size-8 text-primary" />
-            <h1 className="text-xl font-bold">
+            <h1 className="font-display text-xl font-bold">
               {mode === "in" ? "Iniciar sesión" : "Crear cuenta"}
             </h1>
             <p className="text-sm text-muted-foreground">

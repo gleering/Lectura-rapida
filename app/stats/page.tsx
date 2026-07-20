@@ -1,12 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AppNav } from "@/components/AppNav";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
+import { PageShell } from "@/components/PageShell";
 import { Stats } from "@/components/Stats";
-import { RetentionDashboard } from "@/components/RetentionDashboard";
 import { listBooks, getComprehensionScores } from "@/lib/storage";
 import type { BookMeta } from "@/types";
 import type { ComprehensionScore } from "@/lib/comprehension-service";
+
+// recharts es pesado: se carga solo al abrir el panel por libro (no en el
+// primer render de /stats).
+const RetentionDashboard = dynamic(
+  () => import("@/components/RetentionDashboard").then((m) => m.RetentionDashboard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex justify-center py-16 text-muted-foreground">
+        <Loader2 className="size-6 animate-spin" />
+      </div>
+    ),
+  }
+);
 
 export default function StatsPage() {
   const [books, setBooks] = useState<BookMeta[]>([]);
@@ -31,19 +46,16 @@ export default function StatsPage() {
   }, [selectedBook]);
 
   return (
-    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
-      <AppNav />
-      <main className="mx-auto max-w-5xl px-4 py-8 pb-24 md:pb-8">
-        {/* Encabezado */}
+    <PageShell maxWidth="2xl">
+      {/* Encabezado */}
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <h1
-              className="text-3xl font-bold tracking-tight"
-              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              className="text-3xl font-bold tracking-tight font-display"
             >
               Panel de Estadísticas
             </h1>
-            <p className="mt-1 text-sm text-[#434655]">
+            <p className="mt-1 text-sm text-muted-foreground">
               Monitorea tu evolución cognitiva y hábitos de lectura.
             </p>
           </div>
@@ -56,8 +68,8 @@ export default function StatsPage() {
             className={
               "shrink-0 rounded-full px-5 py-2 text-sm font-medium transition " +
               (selectedBook === null
-                ? "bg-[#004ac6] text-white"
-                : "border border-[#c3c6d7] bg-white text-[#434655] hover:bg-[#f2f3ff]")
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-card text-muted-foreground hover:bg-muted")
             }
           >
             General
@@ -69,8 +81,8 @@ export default function StatsPage() {
               className={
                 "shrink-0 whitespace-nowrap rounded-full px-5 py-2 text-sm font-medium transition " +
                 (selectedBook === book.id
-                  ? "bg-[#004ac6] text-white"
-                  : "border border-[#c3c6d7] bg-white text-[#434655] hover:bg-[#f2f3ff]")
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-card text-muted-foreground hover:bg-muted")
               }
             >
               {book.title}
@@ -79,10 +91,9 @@ export default function StatsPage() {
         </div>
 
         {selectedBook ? (
-          <div className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
+          <div className="rounded-2xl border border-border bg-card p-6">
             <h2
-              className="mb-4 text-lg font-bold"
-              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              className="mb-4 text-lg font-bold font-display"
             >
               Comprensión y Retención
             </h2>
@@ -97,7 +108,6 @@ export default function StatsPage() {
         ) : (
           <Stats />
         )}
-      </main>
-    </div>
+    </PageShell>
   );
 }

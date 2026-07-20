@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, Moon, RotateCcw } from "lucide-react";
+import { Sun, Moon, Monitor, RotateCcw } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,14 @@ const FONTS = [
   },
 ];
 
+const SHORTCUTS: [string[], string][] = [
+  [["Espacio"], "Reproducir / pausar"],
+  [["↑", "↓"], "Subir / bajar velocidad"],
+  [["←", "→"], "Retroceder / avanzar 10 palabras"],
+  [["Inicio", "Fin"], "Ir al principio / final"],
+  [["F"], "Pantalla completa"],
+];
+
 export default function SettingsPage() {
   const { settings, update } = useSettingsStore();
 
@@ -34,7 +42,7 @@ export default function SettingsPage() {
       <AppNav />
       <main className="mx-auto max-w-3xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Ajustes</h1>
+          <h1 className="font-display text-2xl font-bold">Ajustes</h1>
           <Button
             variant="ghost"
             size="sm"
@@ -65,31 +73,35 @@ export default function SettingsPage() {
               <CardTitle>Apariencia</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <Label>Tema de la aplicación</Label>
-                <div className="flex overflow-hidden rounded-md border">
-                  <button
-                    onClick={() => update({ theme: "light" })}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-2 text-sm",
-                      settings.theme === "light"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary"
-                    )}
-                  >
-                    <Sun className="size-4" /> Claro
-                  </button>
-                  <button
-                    onClick={() => update({ theme: "dark" })}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-2 text-sm",
-                      settings.theme === "dark"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary"
-                    )}
-                  >
-                    <Moon className="size-4" /> Oscuro
-                  </button>
+                <div
+                  className="flex overflow-hidden rounded-md border"
+                  role="radiogroup"
+                  aria-label="Tema de la aplicación"
+                >
+                  {(
+                    [
+                      { id: "light", label: "Claro", icon: Sun },
+                      { id: "dark", label: "Oscuro", icon: Moon },
+                      { id: "system", label: "Sistema", icon: Monitor },
+                    ] as const
+                  ).map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      role="radio"
+                      aria-checked={settings.theme === id}
+                      onClick={() => update({ theme: id })}
+                      className={cn(
+                        "flex min-h-11 items-center gap-1.5 px-3 py-2 text-sm",
+                        settings.theme === id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-secondary"
+                      )}
+                    >
+                      <Icon className="size-4" /> {label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -273,6 +285,35 @@ export default function SettingsPage() {
                   <option value={2000}>Cada 2000</option>
                 </Select>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Atajos de teclado del lector */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Atajos de teclado (lector)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+                {SHORTCUTS.map(([keys, desc]) => (
+                  <div
+                    key={desc}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <dt className="text-sm text-muted-foreground">{desc}</dt>
+                    <dd className="flex gap-1">
+                      {keys.map((k) => (
+                        <kbd
+                          key={k}
+                          className="min-w-8 rounded-md border border-border bg-muted px-2 py-1 text-center text-xs font-semibold text-foreground shadow-sm"
+                        >
+                          {k}
+                        </kbd>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </CardContent>
           </Card>
         </div>

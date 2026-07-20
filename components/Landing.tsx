@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Hanken_Grotesk, Geist } from "next/font/google";
 import {
   Gauge,
   GraduationCap,
@@ -14,18 +13,6 @@ import {
   ArrowRight,
   Brain,
 } from "lucide-react";
-
-// Fuentes del diseño (Stitch). Scoped a la landing vía variables CSS.
-const heading = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-landing-heading",
-});
-const body = Geist({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-landing-body",
-});
 
 // Paleta Focus Blue (solo landing).
 const BLUE = "#2563EB";
@@ -104,11 +91,11 @@ const STEPS = [
 export function Landing() {
   return (
     <div
-      className={`${heading.variable} ${body.variable} min-h-screen`}
+      className="min-h-screen"
       style={{
         backgroundColor: SURFACE,
         color: INK,
-        fontFamily: "var(--font-landing-body)",
+        fontFamily: "var(--font-geist)",
       }}
     >
       {/* Header fijo */}
@@ -173,7 +160,7 @@ export function Landing() {
             </span>
             <h1
               className="mb-6 max-w-4xl text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl"
-              style={{ fontFamily: "var(--font-landing-heading)" }}
+              style={{ fontFamily: "var(--font-hanken)" }}
             >
               Comprendé lo que leés.
               <br />
@@ -242,7 +229,7 @@ export function Landing() {
             <div className="mb-16 text-center">
               <h2
                 className="mb-4 text-3xl font-semibold tracking-tight"
-                style={{ fontFamily: "var(--font-landing-heading)" }}
+                style={{ fontFamily: "var(--font-hanken)" }}
               >
                 Potenciá tu lectura
               </h2>
@@ -265,7 +252,7 @@ export function Landing() {
                   </div>
                   <h3
                     className="mb-2 text-xl font-semibold"
-                    style={{ fontFamily: "var(--font-landing-heading)" }}
+                    style={{ fontFamily: "var(--font-hanken)" }}
                   >
                     {title}
                   </h3>
@@ -283,7 +270,7 @@ export function Landing() {
               <div>
                 <h2
                   className="mb-8 text-3xl font-semibold tracking-tight"
-                  style={{ fontFamily: "var(--font-landing-heading)" }}
+                  style={{ fontFamily: "var(--font-hanken)" }}
                 >
                   El camino hacia la maestría lectora
                 </h2>
@@ -308,7 +295,7 @@ export function Landing() {
                         </p>
                         <h3
                           className="mb-2 text-xl font-semibold"
-                          style={{ fontFamily: "var(--font-landing-heading)" }}
+                          style={{ fontFamily: "var(--font-hanken)" }}
                         >
                           {step.title}
                         </h3>
@@ -355,7 +342,7 @@ export function Landing() {
             <div className="relative z-10">
               <h2
                 className="mb-8 text-3xl font-bold leading-tight sm:text-4xl md:text-5xl"
-                style={{ fontFamily: "var(--font-landing-heading)" }}
+                style={{ fontFamily: "var(--font-hanken)" }}
               >
                 Convertí tu tiempo de lectura en aprendizaje real
               </h2>

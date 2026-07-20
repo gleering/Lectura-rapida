@@ -181,7 +181,7 @@ export default function AdminPage() {
         <AppNav />
         <main className="mx-auto max-w-2xl px-4 py-16 text-center">
           <ShieldAlert className="mx-auto size-10 text-muted-foreground" />
-          <h1 className="mt-4 text-xl font-bold">Acceso restringido</h1>
+          <h1 className="font-display mt-4 text-xl font-bold">Acceso restringido</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Esta sección es solo para administradores. Pedí que te asignen el rol{" "}
             <code>admin</code> en Supabase.
@@ -197,7 +197,7 @@ export default function AdminPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Panel de administración</h1>
+            <h1 className="font-display text-2xl font-bold">Panel de administración</h1>
             <p className="text-sm text-muted-foreground">
               Publicá libros al catálogo compartido de todos los usuarios.
             </p>

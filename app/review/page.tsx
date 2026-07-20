@@ -15,6 +15,7 @@ import {
 import { extractReviewConcepts } from "@/lib/active-recall";
 import { createReviewCard, summarizeQueue } from "@/lib/spaced-repetition";
 import { interleaveCards } from "@/lib/interleaving";
+import { toast } from "@/store/useToastStore";
 import type { BookMeta, ReviewCard } from "@/types";
 
 export default function ReviewPage() {
@@ -52,12 +53,15 @@ export default function ReviewPage() {
     setGeneratingBook(book.id);
     try {
       const content = await getBookContent(book.id);
-      if (!content) return;
+      if (!content) {
+        toast.error("No se encontró el contenido del libro.");
+        return;
+      }
       const text = content.words.join(" ");
       const concepts = await extractReviewConcepts(book.title, text);
       if (!concepts || concepts.length === 0) {
-        alert(
-          "No se pudieron generar tarjetas. Verifica que la IA esté configurada en el servidor (GEMINI_API_KEY)."
+        toast.error(
+          "No se pudieron generar tarjetas. La IA no está disponible ahora mismo."
         );
         return;
       }
@@ -77,6 +81,11 @@ export default function ReviewPage() {
       );
       await saveReviewCards(cards);
       await refresh();
+      toast.success(
+        `${cards.length} tarjeta${cards.length === 1 ? "" : "s"} de “${book.title}” creada${cards.length === 1 ? "" : "s"}.`
+      );
+    } catch {
+      toast.error("Ocurrió un error al generar las tarjetas.");
     } finally {
       setGeneratingBook(null);
     }
@@ -87,7 +96,7 @@ export default function ReviewPage() {
 
   if (sessionActive) {
     return (
-      <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
+      <div className="min-h-screen bg-background text-foreground">
         <AppNav />
         <main className="mx-auto max-w-2xl px-4 py-8 pb-24 md:pb-8">
           <ReviewSession
@@ -103,11 +112,11 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
+    <div className="min-h-screen bg-background text-foreground">
       <AppNav />
       <main className="mx-auto max-w-3xl px-4 py-8 pb-24 md:pb-8">
         {!loaded ? (
-          <div className="flex justify-center py-20 text-[#434655]">
+          <div className="flex justify-center py-20 text-muted-foreground">
             <Loader2 className="size-6 animate-spin" />
           </div>
         ) : (
@@ -115,35 +124,34 @@ export default function ReviewPage() {
             {/* Encabezado */}
             <div className="text-center">
               <h1
-                className="text-3xl font-bold tracking-tight"
-                style={{ fontFamily: "var(--font-hanken, inherit)" }}
+                className="text-3xl font-bold tracking-tight font-display"
               >
                 Cola de Repaso
               </h1>
-              <p className="mt-2 text-[#434655]">
+              <p className="mt-2 text-muted-foreground">
                 Mantén tu curva de olvido bajo control.
               </p>
             </div>
 
             {/* Bento de estadísticas */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5 text-center">
-                <p className="text-3xl font-bold text-[#004ac6]">{queue.due}</p>
-                <p className="mt-1 text-xs font-medium text-[#434655]">
+              <div className="rounded-2xl border border-border bg-card p-5 text-center">
+                <p className="text-3xl font-bold text-primary">{queue.due}</p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   Pendientes
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5 text-center">
-                <p className="text-3xl font-bold text-[#006c49]">
+              <div className="rounded-2xl border border-border bg-card p-5 text-center">
+                <p className="text-3xl font-bold text-success">
                   {queue.learning}
                 </p>
-                <p className="mt-1 text-xs font-medium text-[#434655]">
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
                   Aprendiendo
                 </p>
               </div>
-              <div className="rounded-2xl border-2 border-[#2563eb] bg-[#e2e7ff] p-5 text-center">
-                <p className="text-3xl font-bold text-[#131b2e]">{queue.total}</p>
-                <p className="mt-1 text-xs font-medium text-[#434655]">Totales</p>
+              <div className="rounded-2xl border-2 border-primary-bright bg-accent p-5 text-center">
+                <p className="text-3xl font-bold text-foreground">{queue.total}</p>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">Totales</p>
               </div>
             </div>
 
@@ -152,7 +160,7 @@ export default function ReviewPage() {
               <button
                 disabled={dueCards.length === 0}
                 onClick={() => setSessionActive(true)}
-                className="inline-flex items-center gap-2 rounded-full bg-[#004ac6] px-12 py-5 text-lg font-semibold text-white shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#c3c6d7] disabled:text-[#434655]"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-12 py-5 text-lg font-semibold text-primary-foreground shadow-sm transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-border disabled:text-muted-foreground"
               >
                 <Play className="size-5 fill-current" />
                 {dueCards.length > 0
@@ -160,7 +168,7 @@ export default function ReviewPage() {
                   : "Nada por repasar ahora"}
               </button>
               {dueCards.length > 0 && (
-                <p className="flex items-center gap-1.5 text-sm text-[#434655]">
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Timer className="size-4" />
                   Tiempo estimado: {estMinutes} minuto
                   {estMinutes === 1 ? "" : "s"}
@@ -169,27 +177,27 @@ export default function ReviewPage() {
             </div>
 
             {/* Generar tarjetas por libro */}
-            <div className="rounded-2xl border border-[#c3c6d7] bg-white p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <h2 className="mb-4 flex items-center gap-2 text-base font-semibold">
-                <Sparkles className="size-5 text-[#784b00]" />
+                <Sparkles className="size-5 text-warning-soft-foreground" />
                 Crear tarjetas desde tus libros
               </h2>
               <div className="space-y-3">
                 {books.length === 0 ? (
-                  <p className="text-sm text-[#434655]">
+                  <p className="text-sm text-muted-foreground">
                     Sube un libro en la Biblioteca para generar tarjetas de repaso.
                   </p>
                 ) : (
                   books.map((book) => (
                     <div
                       key={book.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-[#c3c6d7] bg-[#f2f3ff] p-3"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted p-3"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-[#131b2e]">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {book.title}
                         </p>
-                        <p className="text-xs text-[#434655]">
+                        <p className="text-xs text-muted-foreground">
                           {cardCountByBook[book.id] || 0} tarjeta
                           {(cardCountByBook[book.id] || 0) === 1 ? "" : "s"}
                         </p>
@@ -197,7 +205,7 @@ export default function ReviewPage() {
                       <button
                         disabled={generatingBook !== null}
                         onClick={() => handleGenerate(book)}
-                        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#004ac6] px-4 py-2 text-sm font-medium text-[#004ac6] transition hover:bg-[#eaedff] disabled:opacity-50"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary px-4 py-2 text-sm font-medium text-primary transition hover:bg-secondary disabled:opacity-50"
                       >
                         {generatingBook === book.id ? (
                           <>

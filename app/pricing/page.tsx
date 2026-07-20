@@ -61,7 +61,7 @@ export default function PricingPage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             <Sparkles className="size-4" /> Membresía ReadFlow
           </span>
-          <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
+          <h1 className="font-display mt-4 text-3xl font-bold sm:text-4xl">
             Entrená tu atención. Volvé a leer libros de verdad.
           </h1>
           <p className="mt-3 text-muted-foreground">

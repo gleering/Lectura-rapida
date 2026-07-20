@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Brain, Eye, Zap, BarChart3, Lightbulb, Award, TrendingUp, LogIn, Loader2 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
@@ -13,8 +14,20 @@ import { UserProfile } from "@/components/UserProfile";
 import { DiagnosticTest } from "@/components/DiagnosticTest";
 import { PersonalizedPlanDisplay } from "@/components/PersonalizedPlanDisplay";
 import { CertificateDisplay } from "@/components/CertificateDisplay";
-import { ProgressTracker } from "@/components/ProgressTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+// recharts (pesado) solo se carga al entrar a la pestaña "Progreso".
+const ProgressTracker = dynamic(
+  () => import("@/components/ProgressTracker").then((m) => m.ProgressTracker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex justify-center py-16 text-muted-foreground">
+        <Loader2 className="size-6 animate-spin" />
+      </div>
+    ),
+  }
+);
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { SchulteScore } from "@/lib/schulte-table";
 import type { NBackScore } from "@/lib/nback-test";
@@ -61,7 +74,7 @@ export default function TrainingPage() {
         <AppNav />
         <main className="mx-auto max-w-2xl px-4 py-10 pb-24 md:pb-10">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Centro de Entrenamiento</h1>
+            <h1 className="font-display text-3xl font-bold mb-2">Centro de Entrenamiento</h1>
             <p className="text-muted-foreground">
               Ejercicios científicos para expandir tu visión y mejorar memoria
             </p>
@@ -96,7 +109,7 @@ export default function TrainingPage() {
       <AppNav />
       <main className="mx-auto max-w-6xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Centro de Entrenamiento</h1>
+          <h1 className="font-display text-3xl font-bold mb-2">Centro de Entrenamiento</h1>
           <p className="text-muted-foreground">
             Ejercicios científicos para expandir tu visión y mejorar memoria
           </p>

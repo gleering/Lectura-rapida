@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { Landing } from "@/components/Landing";
+import { Onboarding } from "@/components/Onboarding";
+import { StatTile } from "@/components/StatTile";
+import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/lib/auth";
 import { UploadButton } from "@/components/UploadButton";
 import {
@@ -70,26 +73,37 @@ export default function HomePage() {
   const recent = books.slice(0, 8);
   const hasLearning = metrics && metrics.totalConcepts > 0;
 
+  // Usuario nuevo: sin libros ni conceptos → flujo guiado de arranque.
+  if (loaded && books.length === 0 && !hasLearning) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <AppNav />
+        <main className="mx-auto max-w-[1280px] px-4 py-8 pb-28 md:pb-10">
+          <Onboarding />
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#faf8ff] text-[#131b2e]">
+    <div className="min-h-screen bg-background text-foreground">
       <AppNav />
       <main className="mx-auto max-w-[1280px] space-y-8 px-4 py-8 pb-28 md:pb-10">
         {/* Hero */}
         <section className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <div>
             <h2
-              className="text-2xl font-bold tracking-tight text-[#131b2e] sm:text-[32px]"
-              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              className="text-2xl font-bold tracking-tight text-foreground sm:text-[32px] font-display"
             >
               Hola, lector. ¿Qué vamos a entrenar hoy?
             </h2>
-            <p className="mt-1 text-[#434655]">
+            <p className="mt-1 text-muted-foreground">
               Tu mente está lista para un nuevo desafío de enfoque.
             </p>
           </div>
           <UploadButton
             label="Subir libro"
-            className="shrink-0 rounded-xl bg-[#004ac6] px-6 py-3 text-white shadow-lg shadow-[#004ac6]/20 hover:bg-[#003ea8]"
+            className="shrink-0 rounded-xl bg-primary px-6 py-3 text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
           />
         </section>
 
@@ -97,20 +111,20 @@ export default function HomePage() {
         {hasLearning && metrics && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
             <div className="grid grid-cols-3 gap-4 md:col-span-8">
-              <StatCard
-                icon={<Trophy className="size-6 text-[#784b00]" />}
+              <StatTile
+                icon={<Trophy className="size-6 text-warning-soft-foreground" />}
                 label="Nivel"
                 value={`${metrics.masteryLevel}`}
                 sub={`${metrics.mastered} dominado${metrics.mastered === 1 ? "" : "s"}`}
               />
-              <StatCard
-                icon={<Flame className="size-6 text-[#ba1a1a]" />}
+              <StatTile
+                icon={<Flame className="size-6 text-destructive" />}
                 label="Racha"
                 value={`${metrics.streak}`}
                 sub={`día${metrics.streak === 1 ? "" : "s"}`}
               />
-              <StatCard
-                icon={<Repeat className="size-6 text-[#006c49]" />}
+              <StatTile
+                icon={<Repeat className="size-6 text-success" />}
                 label="Repasos"
                 value={`${metrics.reviewsToday}`}
                 sub="hoy"
@@ -120,38 +134,38 @@ export default function HomePage() {
             {metrics.atRisk > 0 ? (
               <Link
                 href="/review"
-                className="group flex items-center justify-between rounded-2xl border border-[#ba1a1a]/10 bg-[#ffdad6] p-5 transition-transform active:scale-[0.98] md:col-span-4"
+                className="group flex items-center justify-between rounded-2xl border border-destructive/10 bg-destructive-soft p-5 transition-transform active:scale-[0.98] md:col-span-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-[#ba1a1a] p-2 text-white">
+                  <div className="rounded-xl bg-destructive p-2 text-destructive-foreground">
                     <Brain className="size-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#93000a]">
+                    <p className="text-sm font-bold text-destructive-soft-foreground">
                       {metrics.atRisk} concepto{metrics.atRisk === 1 ? "" : "s"} en riesgo
                     </p>
-                    <p className="text-xs text-[#93000a]/80">¡Repásalos ahora!</p>
+                    <p className="text-xs text-destructive-soft-foreground/80">¡Repásalos ahora!</p>
                   </div>
                 </div>
-                <ChevronRight className="size-5 text-[#93000a] transition-transform group-hover:translate-x-1" />
+                <ChevronRight className="size-5 text-destructive-soft-foreground transition-transform group-hover:translate-x-1" />
               </Link>
             ) : (
               <Link
                 href="/review"
-                className="group flex items-center justify-between rounded-2xl border border-[#006c49]/15 bg-[#6cf8bb]/40 p-5 transition-transform active:scale-[0.98] md:col-span-4"
+                className="group flex items-center justify-between rounded-2xl border border-success/15 bg-success-soft/40 p-5 transition-transform active:scale-[0.98] md:col-span-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="rounded-xl bg-[#006c49] p-2 text-white">
+                  <div className="rounded-xl bg-success p-2 text-success-foreground">
                     <Check className="size-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#00714d]">Todo al día</p>
-                    <p className="text-xs text-[#00714d]/80">
+                    <p className="text-sm font-bold text-success-soft-foreground">Todo al día</p>
+                    <p className="text-xs text-success-soft-foreground/80">
                       Sin conceptos en riesgo.
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="size-5 text-[#00714d] transition-transform group-hover:translate-x-1" />
+                <ChevronRight className="size-5 text-success-soft-foreground transition-transform group-hover:translate-x-1" />
               </Link>
             )}
           </div>
@@ -163,18 +177,18 @@ export default function HomePage() {
             {/* Metas del día */}
             {goals.length > 0 && (
               <div className="space-y-4 md:col-span-4">
-                <h3 className="flex items-center gap-2 text-sm font-medium text-[#434655]">
+                <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <ListChecks className="size-4" /> Metas del día
                 </h3>
-                <div className="space-y-4 rounded-2xl border border-[#c3c6d7] bg-[#f2f3ff] p-4">
+                <div className="space-y-4 rounded-2xl border border-border bg-muted p-4">
                   {goals.map((g) => (
                     <div key={g.id} className="flex items-center gap-3">
                       <div
                         className={cn(
                           "flex size-6 shrink-0 items-center justify-center rounded-md border-2",
                           g.done
-                            ? "border-[#006c49] bg-[#006c49] text-white"
-                            : "border-[#c3c6d7]"
+                            ? "border-success bg-success text-success-foreground"
+                            : "border-border"
                         )}
                       >
                         {g.done && <Check className="size-3.5" strokeWidth={3} />}
@@ -183,7 +197,7 @@ export default function HomePage() {
                         <div className="mb-1 flex items-center justify-between">
                           <span
                             className={cn(
-                              "text-sm text-[#131b2e]",
+                              "text-sm text-foreground",
                               g.done && "line-through opacity-50"
                             )}
                           >
@@ -192,17 +206,17 @@ export default function HomePage() {
                           <span
                             className={cn(
                               "text-[10px] font-bold",
-                              g.done ? "text-[#006c49]" : "text-[#434655]"
+                              g.done ? "text-success" : "text-muted-foreground"
                             )}
                           >
                             {Math.round(g.progress)}%
                           </span>
                         </div>
-                        <div className="h-1 overflow-hidden rounded-full bg-[#c3c6d7]">
+                        <div className="h-1 overflow-hidden rounded-full bg-border">
                           <div
                             className={cn(
                               "h-full rounded-full",
-                              g.done ? "bg-[#006c49]" : "bg-[#004ac6]"
+                              g.done ? "bg-success" : "bg-primary"
                             )}
                             style={{ width: `${g.progress}%` }}
                           />
@@ -222,11 +236,11 @@ export default function HomePage() {
                   goals.length > 0 ? "md:col-span-8" : "md:col-span-12"
                 )}
               >
-                <h3 className="flex items-center gap-2 text-sm font-medium text-[#434655]">
+                <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <PlayCircle className="size-4" /> Continuar lectura
                 </h3>
-                <div className="flex flex-col overflow-hidden rounded-2xl border border-[#c3c6d7] bg-white shadow-sm sm:flex-row">
-                  <div className="relative h-48 w-full shrink-0 bg-[#eaedff] sm:h-auto sm:w-40">
+                <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm sm:flex-row">
+                  <div className="relative h-48 w-full shrink-0 bg-secondary sm:h-auto sm:w-40">
                     {continueBook.cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -236,10 +250,10 @@ export default function HomePage() {
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center">
-                        <BookOpen className="size-10 text-[#004ac6]/40" />
+                        <BookOpen className="size-10 text-primary/40" />
                       </div>
                     )}
-                    <div className="absolute left-3 top-3 rounded-full bg-[#006c49] px-2 py-0.5 text-[10px] font-bold text-white">
+                    <div className="absolute left-3 top-3 rounded-full bg-success px-2 py-0.5 text-[10px] font-bold text-success-foreground">
                       ACTIVO
                     </div>
                   </div>
@@ -247,19 +261,19 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h4 className="truncate text-xl font-semibold text-[#131b2e]">
+                          <h4 className="truncate text-xl font-semibold text-foreground">
                             {continueBook.title}
                           </h4>
                           {continueBook.author && (
-                            <p className="truncate text-[#434655]">
+                            <p className="truncate text-muted-foreground">
                               {continueBook.author}
                             </p>
                           )}
                         </div>
-                        <Bookmark className="size-5 shrink-0 text-[#004ac6]" />
+                        <Bookmark className="size-5 shrink-0 text-primary" />
                       </div>
                       <div className="mt-6">
-                        <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-tight text-[#434655]">
+                        <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-tight text-muted-foreground">
                           <span>Progreso de lectura</span>
                           <span>
                             {(
@@ -270,9 +284,9 @@ export default function HomePage() {
                             %
                           </span>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-[#e2e7ff]">
+                        <div className="h-2 overflow-hidden rounded-full bg-accent">
                           <div
-                            className="h-full rounded-full bg-[#004ac6]"
+                            className="h-full rounded-full bg-primary"
                             style={{
                               width: `${
                                 ((continueBook.progressIndex + 1) /
@@ -287,7 +301,7 @@ export default function HomePage() {
                     <div className="mt-6 flex justify-end">
                       <Link
                         href={`/reader/${continueBook.id}`}
-                        className="flex items-center gap-2 rounded-lg bg-[#dae2fd] px-6 py-2 text-sm font-medium text-[#004ac6] transition-all hover:bg-[#004ac6] hover:text-white"
+                        className="flex items-center gap-2 rounded-lg bg-primary-soft px-6 py-2 text-sm font-medium text-primary transition-all hover:bg-primary hover:text-primary-foreground"
                       >
                         Continuar <Play className="size-4" fill="currentColor" />
                       </Link>
@@ -302,13 +316,13 @@ export default function HomePage() {
         {/* Últimos libros */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-[#434655]">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <History className="size-4" /> Últimos libros
             </h3>
             {books.length > 0 && (
               <Link
                 href="/library"
-                className="text-sm font-medium text-[#004ac6] hover:underline"
+                className="text-sm font-medium text-primary hover:underline"
               >
                 Ver biblioteca
               </Link>
@@ -316,14 +330,14 @@ export default function HomePage() {
           </div>
 
           {!loaded ? (
-            <p className="text-sm text-[#434655]">Cargando…</p>
+            <p className="text-sm text-muted-foreground">Cargando…</p>
           ) : recent.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#c3c6d7] py-12 text-center text-[#434655]">
-              <BookOpen className="size-8 text-[#004ac6]/40" />
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center text-muted-foreground">
+              <BookOpen className="size-8 text-primary/40" />
               <p>Todavía no subiste ningún libro.</p>
               <UploadButton
                 label="Subir tu primer libro"
-                className="rounded-xl bg-[#004ac6] px-6 py-3 text-white hover:bg-[#003ea8]"
+                className="rounded-xl bg-primary px-6 py-3 text-primary-foreground hover:bg-primary/90"
               />
             </div>
           ) : (
@@ -335,7 +349,7 @@ export default function HomePage() {
                     : 0;
                 return (
                   <Link key={b.id} href={`/reader/${b.id}`} className="group space-y-3">
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-[#c3c6d7] bg-[#eaedff] shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-border bg-secondary shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
                       {b.cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -345,22 +359,22 @@ export default function HomePage() {
                         />
                       ) : (
                         <div className="flex size-full items-center justify-center">
-                          <BookOpen className="size-8 text-[#004ac6]/40" />
+                          <BookOpen className="size-8 text-primary/40" />
                         </div>
                       )}
-                      <div className="absolute bottom-0 left-0 h-1 w-full bg-[#e2e7ff]">
+                      <div className="absolute bottom-0 left-0 h-1 w-full bg-accent">
                         <div
                           className={cn(
                             "h-full",
-                            b.finished ? "bg-[#006c49]" : "bg-[#004ac6]"
+                            b.finished ? "bg-success" : "bg-primary"
                           )}
                           style={{ width: `${b.finished ? 100 : pct}%` }}
                         />
                       </div>
                     </div>
                     <div>
-                      <p className="truncate text-sm text-[#131b2e]">{b.title}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#434655]">
+                      <p className="truncate text-sm text-foreground">{b.title}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         {b.finished
                           ? "Completado"
                           : `${pct.toFixed(0)}% completado`}
@@ -373,29 +387,6 @@ export default function HomePage() {
           )}
         </section>
       </main>
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  sub,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#c3c6d7] bg-white p-4 text-center transition-transform active:scale-[0.98]">
-      <div className="mb-2">{icon}</div>
-      <p className="text-[11px] uppercase tracking-wider text-[#434655]">
-        {label}
-      </p>
-      <p className="text-lg font-bold leading-tight text-[#131b2e]">{value}</p>
-      <p className="text-[11px] text-[#434655]">{sub}</p>
     </div>
   );
 }

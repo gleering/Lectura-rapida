@@ -68,7 +68,7 @@ export function Stats() {
 
   if (!global) {
     return (
-      <div className="flex justify-center py-20 text-[#434655]">
+      <div className="flex justify-center py-20 text-muted-foreground">
         <Loader2 className="size-6 animate-spin" />
       </div>
     );
@@ -100,35 +100,35 @@ export function Stats() {
       label: "Lector Veloz",
       hint: "Sostuviste 400 PPM",
       icon: Medal,
-      color: "bg-[#6cf8bb] text-[#00714d]",
+      color: "bg-success-soft text-success-soft-foreground",
       unlocked: global.maxSpeed >= 400,
     },
     {
       label: "Enfoque Total",
       hint: "2 horas de lectura",
       icon: Gem,
-      color: "bg-[#dbe1ff] text-[#004ac6]",
+      color: "bg-primary-soft text-primary",
       unlocked: hours >= 2,
     },
     {
       label: "Racha de 7 días",
       hint: "Hábito consolidado",
       icon: Flame,
-      color: "bg-[#ffddb8] text-[#784b00]",
+      color: "bg-warning-soft text-warning-soft-foreground",
       unlocked: streak >= 7,
     },
     {
       label: "Maestro Crítico",
       hint: comp.total > 0 ? "90% de comprensión" : "Próximamente",
       icon: Cog,
-      color: "bg-[#eaedff] text-[#004ac6]",
+      color: "bg-secondary text-primary",
       unlocked: compPct >= 90,
     },
     {
       label: "Bibliotecario",
       hint: "5 libros terminados",
       icon: Library,
-      color: "bg-[#eaedff] text-[#004ac6]",
+      color: "bg-secondary text-primary",
       unlocked: global.booksFinished >= 5,
     },
   ];
@@ -165,14 +165,20 @@ export function Stats() {
       </section>
 
       {/* Gráfico de barras: actividad */}
-      <section className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
+      <section className="rounded-2xl border border-border bg-card p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h3 className="font-bold text-[#131b2e]">Actividad de lectura</h3>
-          <span className="rounded bg-[#eaedff] px-2 py-1 text-xs font-medium text-[#434655]">
+          <h3 className="font-bold text-foreground">Actividad de lectura</h3>
+          <span className="rounded bg-secondary px-2 py-1 text-xs font-medium text-muted-foreground">
             Últimos 14 días
           </span>
         </div>
-        <div className="flex h-48 items-end justify-between gap-1.5">
+        <div
+          className="flex h-48 items-end justify-between gap-1.5"
+          role="img"
+          aria-label={`Palabras leídas por día en los últimos 14 días. Total: ${formatNumber(
+            recentDays.reduce((sum, d) => sum + d.words, 0)
+          )} palabras. Máximo diario: ${formatNumber(maxDay)}.`}
+        >
           {recentDays.map((d) => (
             <div
               key={d.date}
@@ -180,7 +186,7 @@ export function Stats() {
               title={`${d.date}: ${formatNumber(d.words)} palabras`}
             >
               <div
-                className="w-full rounded-t-lg bg-[#2563eb] transition-all hover:opacity-80"
+                className="w-full rounded-t-lg bg-primary-bright transition-all hover:opacity-80"
                 style={{
                   height: `${(d.words / maxDay) * 100}%`,
                   minHeight: d.words > 0 ? 4 : 0,
@@ -194,8 +200,7 @@ export function Stats() {
       {/* Logros */}
       <section>
         <h3
-          className="mb-6 text-xl font-bold"
-          style={{ fontFamily: "var(--font-hanken, inherit)" }}
+          className="mb-6 text-xl font-bold font-display"
         >
           Logros alcanzados
         </h3>
@@ -204,7 +209,7 @@ export function Stats() {
             <div
               key={a.label}
               className={
-                "group flex flex-col items-center rounded-xl border border-[#c3c6d7] bg-[#f2f3ff] p-4 text-center transition-all " +
+                "group flex flex-col items-center rounded-xl border border-border bg-muted p-4 text-center transition-all " +
                 (a.unlocked ? "" : "opacity-60")
               }
             >
@@ -213,13 +218,13 @@ export function Stats() {
                   "mb-3 flex size-16 items-center justify-center rounded-full transition-transform group-hover:scale-110 " +
                   (a.unlocked
                     ? a.color
-                    : "bg-[#eaedff] text-[#737686] grayscale")
+                    : "bg-secondary text-muted-foreground grayscale")
                 }
               >
                 <a.icon className="size-7" />
               </div>
-              <span className="text-sm font-bold text-[#131b2e]">{a.label}</span>
-              <span className="mt-1 text-[10px] text-[#434655]">
+              <span className="text-sm font-bold text-foreground">{a.label}</span>
+              <span className="mt-1 text-[10px] text-muted-foreground">
                 {a.unlocked ? a.hint : "Próximamente"}
               </span>
             </div>
@@ -228,30 +233,30 @@ export function Stats() {
       </section>
 
       {/* Objetivo de entrenamiento */}
-      <section className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
+      <section className="rounded-2xl border border-border bg-card p-6">
         <div className="mb-4 flex items-center gap-2">
-          <Target className="size-5 text-[#004ac6]" />
-          <h3 className="font-bold text-[#131b2e]">Objetivo de entrenamiento</h3>
+          <Target className="size-5 text-primary" />
+          <h3 className="font-bold text-foreground">Objetivo de entrenamiento</h3>
         </div>
 
         {goal && !goal.completed && (
           <div className="mb-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-[#434655]">
+              <span className="text-muted-foreground">
                 {goal.type === "book"
                   ? "Terminar un libro completo"
                   : `Leer ${formatNumber(goal.target)} palabras`}
               </span>
               {goal.type !== "book" && (
-                <span className="tabular-nums text-[#131b2e]">
+                <span className="tabular-nums text-foreground">
                   {formatNumber(goal.progress)} / {formatNumber(goal.target)}
                 </span>
               )}
             </div>
             {goal.type !== "book" && (
-              <div className="h-2 w-full overflow-hidden rounded-full bg-[#eaedff]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="h-full rounded-full bg-[#006c49]"
+                  className="h-full rounded-full bg-success"
                   style={{
                     width: `${Math.min(100, (goal.progress / goal.target) * 100)}%`,
                   }}
@@ -262,7 +267,7 @@ export function Stats() {
         )}
 
         {goal?.completed && (
-          <p className="mb-4 rounded-lg bg-[#6cf8bb]/20 p-3 text-sm text-[#00714d]">
+          <p className="mb-4 rounded-lg bg-success-soft/20 p-3 text-sm text-success-soft-foreground">
             🎉 ¡Objetivo cumplido! Define uno nuevo para seguir entrenando.
           </p>
         )}
@@ -277,8 +282,8 @@ export function Stats() {
                 className={
                   "rounded-full px-4 py-2 text-sm font-medium transition " +
                   (active
-                    ? "bg-[#004ac6] text-white"
-                    : "border border-[#c3c6d7] bg-white text-[#434655] hover:bg-[#f2f3ff]")
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-card text-muted-foreground hover:bg-muted")
                 }
               >
                 {p.label}
@@ -305,19 +310,19 @@ function BentoCard({
   accent?: boolean;
 }) {
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-[#c3c6d7] bg-white p-6">
+    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-medium text-[#434655]">{label}</span>
-        <Icon className="size-5 text-[#004ac6] opacity-60" />
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        <Icon className="size-5 text-primary opacity-60" />
       </div>
       <div>
-        <div className="text-3xl font-bold tabular-nums text-[#131b2e]">
+        <div className="text-3xl font-bold tabular-nums text-foreground">
           {value}
         </div>
         <div
           className={
             "mt-1 flex items-center gap-1 text-sm " +
-            (accent ? "font-medium text-[#006c49]" : "text-[#434655]")
+            (accent ? "font-medium text-success" : "text-muted-foreground")
           }
         >
           {accent && <Zap className="size-3.5" />}

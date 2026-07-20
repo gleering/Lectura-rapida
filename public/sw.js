@@ -1,5 +1,5 @@
 // Service worker de ReadFlow — cache básico para instalación y uso offline.
-const CACHE = "readflow-v2";
+const CACHE = "readflow-v3";
 const OFFLINE_URLS = ["/", "/library", "/review", "/progress"];
 
 self.addEventListener("install", (event) => {

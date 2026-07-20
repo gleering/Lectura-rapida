@@ -9,7 +9,10 @@ export default defineConfig({
     environment: "node",
     // Solo los tests nuevos: no arrastramos el legacy __tests__/phase3.test.ts,
     // que importa módulos con dependencias de navegador.
-    include: ["__tests__/tableOfContents.test.ts"],
+    include: [
+      "__tests__/tableOfContents.test.ts",
+      "__tests__/textImport.test.ts",
+    ],
   },
   resolve: {
     // "@/lib/x" -> "<root>/lib/x"

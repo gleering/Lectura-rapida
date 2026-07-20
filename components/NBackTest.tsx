@@ -28,16 +28,6 @@ export function NBackTest({ onComplete, initialLevel = 1 }: NBackTestProps) {
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const stimulusTimeRef = useRef<number>(0);
 
-  // Inicializar
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const newState = generateNBackSequence(nextLevel, 20);
-    setState(newState);
-    setScore(null);
-    setFeedback(null);
-    playNextTrial(newState, 0);
-  }, [nextLevel]);
-
   const playNextTrial = useCallback(
     (gameState: NBackGameState, index: number) => {
       if (index >= gameState.trials.length) return;
@@ -54,6 +44,15 @@ export function NBackTest({ onComplete, initialLevel = 1 }: NBackTestProps) {
     },
     []
   );
+
+  // Inicializar cada vez que cambia el nivel objetivo.
+  useEffect(() => {
+    const newState = generateNBackSequence(nextLevel, 20);
+    setState(newState);
+    setScore(null);
+    setFeedback(null);
+    playNextTrial(newState, 0);
+  }, [nextLevel, playNextTrial]);
 
   const handleResponse = useCallback(
     (isMatch: boolean) => {

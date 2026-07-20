@@ -38,20 +38,20 @@ export function ProgressBar({
   const timeRemainingMs = (wordsLeft / speed) * 60000;
 
   return (
-    <div className={cn("w-full space-y-2", light ? "text-[#434655]" : "text-white/70")}>
+    <div className={cn("w-full space-y-2", light ? "text-muted-foreground" : "text-white/70")}>
       <Slider
         min={0}
         max={Math.max(total - 1, 0)}
         value={index}
         onValueChange={onSeek}
         aria-label="Posición de lectura"
-        className={light ? "bg-[#dae2fd]" : "bg-white/15"}
+        className={light ? "bg-primary-soft" : "bg-card/15"}
       />
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs sm:text-sm">
         <span
           className={cn(
             "max-w-[40%] truncate font-medium",
-            light ? "text-[#131b2e]" : "text-white/90"
+            light ? "text-foreground" : "text-white/90"
           )}
         >
           {title}

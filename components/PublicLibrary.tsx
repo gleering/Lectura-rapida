@@ -84,7 +84,7 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
           {isAdmin && (
             <Link
               href="/admin"
-              className="flex items-center gap-1.5 rounded-lg border border-[#c3c6d7] px-3 py-1.5 text-sm font-medium text-[#004ac6] transition-colors hover:bg-[#eaedff]"
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-secondary"
             >
               <ShieldCheck className="size-4" /> Admin
             </Link>
@@ -92,7 +92,7 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
           {user && (
             <button
               onClick={() => signOut()}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-[#434655] transition-colors hover:bg-[#eaedff]"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary"
             >
               Salir
             </button>
@@ -101,12 +101,12 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
       )}
 
       {!user ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#c3c6d7] py-12 text-center text-[#434655]">
-          <Library className="size-8 text-[#004ac6]/40" />
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-12 text-center text-muted-foreground">
+          <Library className="size-8 text-primary/40" />
           <p>Inicia sesión para ver el catálogo compartido de libros.</p>
           <Link
             href="/login?next=/library"
-            className="flex items-center gap-1.5 rounded-lg bg-[#004ac6] px-4 py-2 text-sm font-bold text-white transition-transform active:scale-95"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-transform active:scale-95"
           >
             <LogIn className="size-4" /> Iniciar sesión
           </Link>
@@ -114,11 +114,11 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
       ) : !canAccess ? (
         <Paywall feature="La biblioteca pública" />
       ) : loading ? (
-        <p className="text-sm text-[#434655]">Cargando catálogo…</p>
+        <p className="text-sm text-muted-foreground">Cargando catálogo…</p>
       ) : error ? (
-        <p className="text-sm text-[#ba1a1a]">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       ) : books.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#c3c6d7] py-12 text-center text-[#434655]">
+        <div className="rounded-2xl border border-dashed border-border py-12 text-center text-muted-foreground">
           Todavía no hay libros públicos.
         </div>
       ) : (
@@ -128,9 +128,9 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
             return (
               <div
                 key={b.id}
-                className="group overflow-hidden rounded-2xl border border-[#c3c6d7] bg-white"
+                className="group overflow-hidden rounded-2xl border border-border bg-card"
               >
-                <div className="relative aspect-[3/4] overflow-hidden bg-[#eaedff]">
+                <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
                   {b.cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -140,21 +140,21 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
                     />
                   ) : (
                     <div className="flex size-full items-center justify-center">
-                      <Library className="size-8 text-[#004ac6]/40" />
+                      <Library className="size-8 text-primary/40" />
                     </div>
                   )}
                 </div>
                 <div className="p-3">
-                  <h4 className="line-clamp-1 text-sm font-bold text-[#131b2e]">
+                  <h4 className="line-clamp-1 text-sm font-bold text-foreground">
                     {b.title}
                   </h4>
-                  <p className="mb-3 line-clamp-1 text-[11px] text-[#434655]">
+                  <p className="mb-3 line-clamp-1 text-[11px] text-muted-foreground">
                     {b.author || `${formatNumber(b.totalWords)} palabras`}
                   </p>
                   {imported ? (
                     <Link
                       href={`/reader/pub_${b.id}`}
-                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#004ac6] py-2 text-xs font-bold text-white transition-transform active:scale-95"
+                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-primary py-2 text-xs font-bold text-primary-foreground transition-transform active:scale-95"
                     >
                       <Play className="size-4" fill="currentColor" /> Leer
                     </Link>
@@ -162,7 +162,7 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
                     <button
                       onClick={() => importBook(b)}
                       disabled={busyId === b.id}
-                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#10B981] py-2 text-xs font-bold text-white transition-transform active:scale-95 disabled:opacity-60"
+                      className="flex w-full items-center justify-center gap-1 rounded-lg bg-success py-2 text-xs font-bold text-success-foreground transition-transform active:scale-95 disabled:opacity-60"
                     >
                       {busyId === b.id ? (
                         <Loader2 className="size-4 animate-spin" />

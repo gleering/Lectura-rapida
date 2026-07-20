@@ -2,50 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Sistema visual "Focus Blue" (ver public/stitch_readflow_ai_landing_page/readflow_ai/DESIGN.md).
+   Todos los colores de la app salen de estos tokens; no usar hex sueltos en componentes. */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    color-scheme: light;
+    --background: 257 100% 99%; /* #faf8ff */
+    --foreground: 222 42% 13%; /* #131b2e */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 42% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --popover-foreground: 222 42% 13%;
+    --primary: 218 100% 39%; /* #004ac6 */
+    --primary-foreground: 0 0% 100%;
+    --primary-bright: 221 83% 53%; /* #2563eb */
+    --primary-soft: 230 100% 93%; /* #dbe1ff */
+    --primary-soft-foreground: 218 100% 39%;
+    --secondary: 231 100% 96%; /* #eaedff */
+    --secondary-foreground: 222 42% 13%;
+    --muted: 235 100% 97%; /* #f2f3ff */
+    --muted-foreground: 230 12% 30%; /* #434655 */
+    --accent: 230 100% 94%; /* #e2e7ff */
+    --accent-foreground: 222 42% 13%;
+    --destructive: 0 75% 42%; /* #ba1a1a */
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 6 100% 92%; /* #ffdad6 */
+    --destructive-soft-foreground: 356 100% 29%; /* #93000a */
+    --success: 161 100% 21%; /* #006c49 (verde Flow) */
+    --success-foreground: 0 0% 100%;
+    --success-soft: 154 91% 70%; /* #6cf8bb */
+    --success-soft-foreground: 161 100% 22%; /* #00714d */
+    --warning: 38 100% 30%; /* #996100 (ámbar Insight) */
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 31 100% 86%; /* #ffddb8 */
+    --warning-soft-foreground: 38 100% 24%; /* #784b00 */
+    --border: 231 20% 80%; /* #c3c6d7 */
+    --input: 231 20% 80%;
+    --ring: 218 100% 39%;
     --radius: 0.65rem;
   }
 
+  /* Modo oscuro: base navy profunda (DESIGN.md, "Navy-950 para sesiones nocturnas").
+     Misma familia de matices 220–235 para que los softs sigan siendo tonales. */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    color-scheme: dark;
+    --background: 228 45% 7%;
+    --foreground: 233 100% 97%; /* #eef0ff */
+    --card: 227 35% 11%;
+    --card-foreground: 233 100% 97%;
+    --popover: 227 35% 11%;
+    --popover-foreground: 233 100% 97%;
+    --primary: 221 83% 53%; /* #2563eb — blanco encima da 5.2:1 */
+    --primary-foreground: 0 0% 100%;
+    --primary-bright: 221 96% 64%;
+    --primary-soft: 223 47% 22%;
+    --primary-soft-foreground: 227 100% 85%; /* #b4c5ff */
+    --secondary: 227 30% 16%;
+    --secondary-foreground: 233 100% 97%;
+    --muted: 227 30% 13%;
+    --muted-foreground: 227 25% 72%;
+    --accent: 227 32% 19%;
+    --accent-foreground: 233 100% 97%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 357 45% 16%;
+    --destructive-soft-foreground: 4 100% 84%; /* #ffb4ab */
+    --success: 156 60% 45%;
+    --success-foreground: 160 100% 8%;
+    --success-soft: 160 45% 14%;
+    --success-soft-foreground: 154 91% 70%;
+    --warning: 36 90% 55%;
+    --warning-foreground: 36 100% 8%;
+    --warning-soft: 35 45% 15%;
+    --warning-soft-foreground: 31 100% 86%;
+    --border: 227 22% 24%;
+    --input: 227 22% 24%;
+    --ring: 221 96% 64%;
   }
 }
 
@@ -57,6 +89,12 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  /* Foco visible por teclado en todo control que no traiga su propio ring
+     (los botones shadcn hacen outline-none + ring y pisan esta regla). */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 }
 

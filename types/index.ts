@@ -258,7 +258,7 @@ export interface DailyLearningGoal {
   progress: number;
 }
 
-export type ThemeMode = "dark" | "light";
+export type ThemeMode = "dark" | "light" | "system";
 
 export interface ReaderSettings {
   theme: ThemeMode;
@@ -282,7 +282,9 @@ export interface ReaderSettings {
 }
 
 export const DEFAULT_SETTINGS: ReaderSettings = {
-  theme: "dark",
+  // El sistema visual Focus Blue es light-first; quien ya eligió "dark"
+  // conserva su preferencia guardada.
+  theme: "light",
   fontFamily:
     "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   fontSize: 64,

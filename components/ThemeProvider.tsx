@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { MotionConfig } from "framer-motion";
 import { useSettingsStore } from "@/store/useSettingsStore";
 
-/** Loads persisted settings and reflects the theme onto <html>. */
+/**
+ * Carga los ajustes persistidos y refleja el tema en <html>.
+ * - "system" sigue prefers-color-scheme en vivo.
+ * - MotionConfig hace que framer-motion respete prefers-reduced-motion
+ *   (crítico para usuarios sensibles al movimiento; el RSVP solo anima
+ *   cuando el usuario pulsa play).
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const load = useSettingsStore((s) => s.load);
   const theme = useSettingsStore((s) => s.settings.theme);
@@ -16,8 +23,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loaded) return;
     const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const dark = theme === "dark" || (theme === "system" && media.matches);
+      root.classList.toggle("dark", dark);
+    };
+    apply();
+    if (theme !== "system") return;
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
   }, [theme, loaded]);
 
-  return <>{children}</>;
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
 }

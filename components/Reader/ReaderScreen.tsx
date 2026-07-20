@@ -35,7 +35,9 @@ import {
 } from "@/lib/storage";
 import { extractReviewConcepts } from "@/lib/active-recall";
 import { createReviewCard } from "@/lib/spaced-repetition";
+import { toast } from "@/store/useToastStore";
 import { cn, formatNumber } from "@/lib/utils";
+import { SPEED_OPTIONS } from "@/types";
 import type {
   BookMeta,
   ReaderMode,
@@ -196,6 +198,18 @@ export function ReaderScreen({
         case "ArrowRight":
           engine.step(10);
           break;
+        case "ArrowUp": {
+          e.preventDefault();
+          const i = SPEED_OPTIONS.indexOf(settings.speed);
+          if (i < SPEED_OPTIONS.length - 1) update({ speed: SPEED_OPTIONS[i + 1] });
+          break;
+        }
+        case "ArrowDown": {
+          e.preventDefault();
+          const i = SPEED_OPTIONS.indexOf(settings.speed);
+          if (i > 0) update({ speed: SPEED_OPTIONS[i - 1] });
+          break;
+        }
         case "Home":
           engine.toStart();
           break;
@@ -217,6 +231,8 @@ export function ReaderScreen({
     definition,
     goalDone,
     finished,
+    settings.speed,
+    update,
   ]);
 
   const openSummary = useCallback(async () => {
@@ -245,7 +261,7 @@ export function ReaderScreen({
       const concepts = await extractReviewConcepts(meta.title, words.join(" "));
       if (!concepts || concepts.length === 0) {
         setConsolidateError(
-          "No se pudieron crear tarjetas. Verifica que la IA esté configurada en el servidor (GEMINI_API_KEY)."
+          "No se pudieron crear tarjetas ahora. La IA no está disponible; puedes intentarlo de nuevo más tarde."
         );
         return;
       }
@@ -264,7 +280,14 @@ export function ReaderScreen({
         })
       );
       await saveReviewCards(cards);
+      toast.success(
+        `${cards.length} tarjeta${cards.length === 1 ? "" : "s"} de repaso creada${cards.length === 1 ? "" : "s"}.`
+      );
       router.push("/review");
+    } catch {
+      setConsolidateError(
+        "Ocurrió un error al crear las tarjetas. Inténtalo de nuevo."
+      );
     } finally {
       setConsolidating(false);
     }
@@ -306,6 +329,15 @@ export function ReaderScreen({
     }
   }, [question, qCardSaved, meta.id]);
 
+  // Callbacks estables para <Controls> (memoizado): sin esto, cada tick del
+  // RSVP crearía nuevas funciones y re-renderizaría la bandeja por cada palabra.
+  const handleSpeed = useCallback((s: Speed) => update({ speed: s }), [update]);
+  const handleMode = useCallback((m: ReaderMode) => update({ mode: m }), [update]);
+  const handleToggleOrp = useCallback(
+    (v: boolean) => update({ orpEnabled: v }),
+    [update]
+  );
+
   return (
     <div
       ref={stageRef}
@@ -313,7 +345,7 @@ export function ReaderScreen({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar — solid light surface (Focus-Blue mockup) */}
-      <div className="safe-top safe-x flex items-center justify-between gap-3 border-b border-[#c3c6d7] bg-[#faf8ff] pb-3">
+      <div className="safe-top safe-x flex items-center justify-between gap-3 border-b border-border bg-background pb-3">
         <div className="flex min-w-0 items-center gap-2">
           <Button
             variant="ghost"
@@ -322,20 +354,19 @@ export function ReaderScreen({
               void engine.flush();
               router.push("/");
             }}
-            className="bg-transparent text-[#004ac6] hover:bg-[#eaedff] hover:text-[#004ac6]"
+            className="bg-transparent text-primary hover:bg-secondary hover:text-primary"
             aria-label="Volver"
           >
             <ArrowLeft />
           </Button>
           <div className="flex min-w-0 flex-col">
             <h1
-              className="truncate text-lg font-bold leading-tight text-[#004ac6]"
-              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              className="truncate text-lg font-bold leading-tight text-primary font-display"
             >
               {meta.title}
             </h1>
             {meta.author && (
-              <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-[#434655]">
+              <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {meta.author}
               </span>
             )}
@@ -354,7 +385,7 @@ export function ReaderScreen({
           )}
           <button
             onClick={openSummary}
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-[#004ac6] transition-colors hover:bg-[#eaedff]"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-primary transition-colors hover:bg-secondary"
           >
             <Sparkles className="size-4" />
             <span className="hidden sm:inline">Resumen del capítulo</span>
@@ -430,7 +461,7 @@ export function ReaderScreen({
       </div>
 
       {/* Bottom controls + progress — solid light surface (Focus-Blue mockup) */}
-      <div className="safe-x safe-bottom space-y-4 border-t border-[#c3c6d7] bg-[#faf8ff] pt-3">
+      <div className="safe-x safe-bottom space-y-4 border-t border-border bg-background pt-3">
         <ProgressBar
           title={meta.title}
           index={engine.index}
@@ -452,10 +483,10 @@ export function ReaderScreen({
           onStep={engine.step}
           onStart={engine.toStart}
           onEnd={engine.toEnd}
-          onSpeed={(s: Speed) => update({ speed: s })}
-          onMode={(m: ReaderMode) => update({ mode: m })}
+          onSpeed={handleSpeed}
+          onMode={handleMode}
           onMethod={onMethod}
-          onToggleOrp={(v) => update({ orpEnabled: v })}
+          onToggleOrp={handleToggleOrp}
           onFullscreen={toggleFullscreen}
         />
       </div>

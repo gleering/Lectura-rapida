@@ -4,7 +4,8 @@
 // 2000-page book never blocks the UI thread. We stream page by page and report
 // progress so the processing screen can animate a real progress bar.
 
-import * as pdfjsLib from "pdfjs-dist";
+// Solo tipos: se borran al compilar, no entran al bundle.
+import type * as PdfjsModule from "pdfjs-dist";
 import type { BookSection } from "@/types";
 import {
   buildSectionsFromOutline,
@@ -13,13 +14,24 @@ import {
   type LineRef,
 } from "@/lib/tableOfContents";
 
-// Point pdf.js at the worker bundle. Webpack emits this file and rewrites the
-// URL at build time, so it works offline without a CDN.
-if (typeof window !== "undefined") {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url
-  ).toString();
+// pdf.js es pesado (~350 kB): se carga bajo demanda al subir un PDF, no en el
+// bundle de Inicio/Biblioteca. La promesa se memoiza para no re-importar.
+let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
+function loadPdfjs() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import("pdfjs-dist").then((pdfjsLib) => {
+      // Point pdf.js at the worker bundle. Webpack emits this file and rewrites
+      // the URL at build time, so it works offline without a CDN.
+      if (typeof window !== "undefined") {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          "pdfjs-dist/build/pdf.worker.min.mjs",
+          import.meta.url
+        ).toString();
+      }
+      return pdfjsLib;
+    });
+  }
+  return pdfjsPromise;
 }
 
 export interface ParsedBook {
@@ -85,7 +97,7 @@ function itemsToLines(items: { str: string; transform: number[] }[]): Line[] {
 /** Renderiza la 1ª página a una miniatura JPEG (dataURL). Devuelve undefined si
  *  no hay DOM (SSR) o si el render falla; nunca rompe la carga del libro. */
 async function renderCover(
-  pdf: Awaited<ReturnType<typeof pdfjsLib.getDocument>["promise"]>
+  pdf: Awaited<ReturnType<typeof PdfjsModule.getDocument>["promise"]>
 ): Promise<string | undefined> {
   if (typeof document === "undefined") return undefined;
   try {
@@ -111,6 +123,7 @@ export async function parsePdf(
   onProgress?: (ratio: number) => void
 ): Promise<ParsedBook> {
   const data = file instanceof File ? await file.arrayBuffer() : file;
+  const pdfjsLib = await loadPdfjs();
   const loadingTask = pdfjsLib.getDocument({ data });
   const pdf = await loadingTask.promise;
   const totalPages = pdf.numPages;

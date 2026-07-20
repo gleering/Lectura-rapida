@@ -60,7 +60,7 @@ export default function TutorPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground">Aprendiendo</p>
-              <h1 className="text-lg font-semibold">{session.concept}</h1>
+              <h1 className="font-display text-lg font-semibold">{session.concept}</h1>
             </div>
             <Button
               variant="ghost"
@@ -87,7 +87,7 @@ export default function TutorPage() {
       <AppNav />
       <main className="mx-auto max-w-2xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
             <GraduationCap className="size-6 text-primary" />
             Tutor de comprensión
           </h1>

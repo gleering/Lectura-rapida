@@ -2,6 +2,20 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "dev-local",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["NEXT_PUBLIC_SUPABASE_URL=", "npm", "run", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
       "name": "readflow",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"],

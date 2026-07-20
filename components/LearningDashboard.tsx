@@ -46,32 +46,32 @@ export function LearningDashboard({
       label: "Dominados",
       value: metrics.mastered,
       icon: CheckCircle2,
-      iconBg: "bg-[#6cf8bb]/30 text-[#006c49]",
-      hoverBorder: "hover:border-[#006c49]",
+      iconBg: "bg-success-soft/30 text-success",
+      hoverBorder: "hover:border-success",
       hint: "En memoria de largo plazo",
     },
     {
       label: "Consolidando",
       value: metrics.consolidating,
       icon: Sprout,
-      iconBg: "bg-[#2563eb]/10 text-[#004ac6]",
-      hoverBorder: "hover:border-[#004ac6]",
+      iconBg: "bg-primary-bright/10 text-primary",
+      hoverBorder: "hover:border-primary",
       hint: "En camino a dominarse",
     },
     {
       label: "Aprendiendo",
       value: metrics.learning,
       icon: Brain,
-      iconBg: "bg-[#996100]/10 text-[#784b00]",
-      hoverBorder: "hover:border-[#784b00]",
+      iconBg: "bg-warning/10 text-warning-soft-foreground",
+      hoverBorder: "hover:border-warning-soft-foreground",
       hint: "Recién comprendidos",
     },
     {
       label: "En riesgo",
       value: metrics.atRisk,
       icon: AlertTriangle,
-      iconBg: "bg-[#ffdad6] text-[#ba1a1a]",
-      hoverBorder: "hover:border-[#ba1a1a]",
+      iconBg: "bg-destructive-soft text-destructive",
+      hoverBorder: "hover:border-destructive",
       hint: "Toca repasarlos hoy",
     },
   ];
@@ -80,15 +80,14 @@ export function LearningDashboard({
     <div className="space-y-8">
       {/* Nivel de dominio — gamificación reorientada a comprensión */}
       <section>
-        <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#004ac6] to-[#2563eb] p-6 text-white shadow-lg md:flex-row md:p-8">
+        <div className="relative flex flex-col items-center justify-between gap-6 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-bright p-6 text-white shadow-lg md:flex-row md:p-8">
           <div className="z-10 space-y-3 text-center md:text-left">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 backdrop-blur-md">
               <Sparkles className="size-4" />
               <span className="text-sm font-medium">Estado actual</span>
             </div>
             <h2
-              className="text-2xl font-bold md:text-3xl"
-              style={{ fontFamily: "var(--font-hanken, inherit)" }}
+              className="text-2xl font-bold md:text-3xl font-display"
             >
               Nivel {metrics.masteryLevel}
             </h2>
@@ -112,7 +111,7 @@ export function LearningDashboard({
                 strokeWidth="12"
               />
               <circle
-                className="text-[#6cf8bb] transition-[stroke-dashoffset] duration-500"
+                className="text-success-soft transition-[stroke-dashoffset] duration-500"
                 cx="50%"
                 cy="50%"
                 fill="transparent"
@@ -145,8 +144,7 @@ export function LearningDashboard({
       {/* Estado de conceptos */}
       <section className="space-y-4">
         <h3
-          className="text-xl font-bold"
-          style={{ fontFamily: "var(--font-hanken, inherit)" }}
+          className="text-xl font-bold font-display"
         >
           Estado de conceptos
         </h3>
@@ -155,16 +153,16 @@ export function LearningDashboard({
             <div
               key={s.label}
               className={
-                "group rounded-2xl border border-[#c3c6d7] bg-white p-4 transition-colors " +
+                "group rounded-2xl border border-border bg-card p-4 transition-colors " +
                 s.hoverBorder
               }
             >
               <div className={"mb-2 inline-flex rounded-lg p-2 " + s.iconBg}>
                 <s.icon className="size-5" />
               </div>
-              <p className="text-2xl font-bold text-[#131b2e]">{s.value}</p>
-              <p className="text-sm font-medium text-[#131b2e]">{s.label}</p>
-              <p className="mt-0.5 text-[11px] leading-tight text-[#434655]">
+              <p className="text-2xl font-bold text-foreground">{s.value}</p>
+              <p className="text-sm font-medium text-foreground">{s.label}</p>
+              <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
                 {s.hint}
               </p>
             </div>
@@ -175,45 +173,45 @@ export function LearningDashboard({
       {/* Indicadores de memoria */}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Retención */}
-        <div className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
-          <p className="text-sm font-medium text-[#434655]">Retención</p>
-          <p className="mb-4 text-2xl font-bold text-[#131b2e]">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <p className="text-sm font-medium text-muted-foreground">Retención</p>
+          <p className="mb-4 text-2xl font-bold text-foreground">
             {metrics.retentionRate}%{" "}
-            <span className="text-sm font-normal text-[#006c49]">promedio</span>
+            <span className="text-sm font-normal text-success">promedio</span>
           </p>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-[#eaedff]">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div
-              className="h-full rounded-full bg-[#004ac6]"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${metrics.retentionRate}%` }}
             />
           </div>
-          <p className="mt-2 text-[11px] text-[#434655]">
+          <p className="mt-2 text-[11px] text-muted-foreground">
             Recuerdos exitosos sobre el total de intentos.
           </p>
         </div>
 
         {/* Fuerza de memoria */}
-        <div className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
-          <p className="text-sm font-medium text-[#434655]">Fuerza de memoria</p>
-          <p className="mb-1 flex items-center gap-1 text-2xl font-bold text-[#131b2e]">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <p className="text-sm font-medium text-muted-foreground">Fuerza de memoria</p>
+          <p className="mb-1 flex items-center gap-1 text-2xl font-bold text-foreground">
             {metrics.avgEase.toFixed(2)}
-            <TrendingUp className="size-5 text-[#006c49]" />
+            <TrendingUp className="size-5 text-success" />
           </p>
-          <p className="text-[11px] text-[#434655]">
+          <p className="text-[11px] text-muted-foreground">
             Facilidad media (SM-2): cuánto se resisten al olvido.
           </p>
         </div>
 
         {/* Conexiones */}
-        <div className="rounded-2xl border border-[#c3c6d7] bg-white p-6">
-          <div className="mb-1 inline-flex rounded-lg bg-[#2563eb]/10 p-2 text-[#004ac6]">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <div className="mb-1 inline-flex rounded-lg bg-primary-bright/10 p-2 text-primary">
             <Network className="size-5" />
           </div>
-          <p className="text-2xl font-bold text-[#131b2e]">
+          <p className="text-2xl font-bold text-foreground">
             {metrics.connections}
           </p>
-          <p className="text-sm font-medium text-[#131b2e]">Conexiones</p>
-          <p className="mt-0.5 text-[11px] text-[#434655]">
+          <p className="text-sm font-medium text-foreground">Conexiones</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
             Ideas enlazadas entre libros: comprensión en red.
           </p>
         </div>
@@ -222,10 +220,9 @@ export function LearningDashboard({
       {/* Metas del día */}
       <section className="space-y-4">
         <h3
-          className="flex items-center gap-2 text-xl font-bold"
-          style={{ fontFamily: "var(--font-hanken, inherit)" }}
+          className="flex items-center gap-2 text-xl font-bold font-display"
         >
-          <Target className="size-5 text-[#004ac6]" />
+          <Target className="size-5 text-primary" />
           Metas de hoy
         </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -235,14 +232,14 @@ export function LearningDashboard({
               className={
                 "flex items-center gap-4 rounded-xl border p-4 " +
                 (g.done
-                  ? "border-[#006c49]/40 bg-[#6cf8bb]/15"
-                  : "border-[#c3c6d7] bg-[#eaedff]")
+                  ? "border-success/40 bg-success-soft/15"
+                  : "border-border bg-secondary")
               }
             >
               <CheckCircle2
                 className={
                   "size-6 flex-shrink-0 " +
-                  (g.done ? "text-[#006c49]" : "text-[#737686]")
+                  (g.done ? "text-success" : "text-muted-foreground")
                 }
               />
               <div className="min-w-0 flex-1">
@@ -250,15 +247,15 @@ export function LearningDashboard({
                   className={
                     "text-sm font-medium " +
                     (g.done
-                      ? "text-[#434655] line-through"
-                      : "text-[#131b2e]")
+                      ? "text-muted-foreground line-through"
+                      : "text-foreground")
                   }
                 >
                   {g.label}
                 </p>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/70">
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-card/70">
                   <div
-                    className="h-full rounded-full bg-[#006c49]"
+                    className="h-full rounded-full bg-success"
                     style={{ width: `${g.progress}%` }}
                   />
                 </div>

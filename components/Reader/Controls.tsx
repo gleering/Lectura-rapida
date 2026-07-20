@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Play,
   Pause,
@@ -39,8 +40,14 @@ const METHOD_TABS: { id: ReadingMethod; label: string }[] = [
   { id: "page", label: "Página" },
 ];
 
-/** Focus-Blue light controls tray — matches the RSVP mockup. */
-export function Controls({
+/**
+ * Focus-Blue light controls tray — matches the RSVP mockup.
+ *
+ * Memoizado: la bandeja no depende del índice de palabra (que cambia en cada
+ * tick del RSVP), así que no debe re-renderizarse mientras las palabras fluyen.
+ * Requiere que ReaderScreen pase callbacks estables (useCallback).
+ */
+export const Controls = React.memo(function Controls({
   isPlaying,
   speed,
   mode,
@@ -66,14 +73,14 @@ export function Controls({
   };
 
   const transportBtn =
-    "p-2 text-[#434655] transition-colors hover:text-[#2563eb] active:scale-90";
+    "flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary-bright active:scale-90";
 
   return (
     <div className="flex flex-col gap-5">
       {/* Method tabs + toggles row */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Method selector tabs */}
-        <div className="flex rounded-lg bg-[#eaedff] p-1" role="radiogroup" aria-label="Estilo de lectura">
+        <div className="flex rounded-lg bg-secondary p-1" role="radiogroup" aria-label="Estilo de lectura">
           {METHOD_TABS.map((m) => {
             const on = m.id === method;
             return (
@@ -85,8 +92,8 @@ export function Controls({
                 className={cn(
                   "rounded-md px-4 py-2 text-sm transition-all",
                   on
-                    ? "bg-[#faf8ff] font-bold text-[#004ac6] shadow-sm"
-                    : "font-medium text-[#434655] hover:text-[#131b2e]"
+                    ? "bg-card font-bold text-primary shadow-sm"
+                    : "font-medium text-muted-foreground hover:text-foreground"
                 )}
               >
                 {m.label}
@@ -98,10 +105,10 @@ export function Controls({
         {/* Toggles: VISTA (mode) + ORP switch + fullscreen */}
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-[#434655]">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Vista
             </span>
-            <div className="flex overflow-hidden rounded-md bg-[#eaedff]">
+            <div className="flex overflow-hidden rounded-md bg-secondary">
               {([1, 2, 3] as ReaderMode[]).map((m) => (
                 <button
                   key={m}
@@ -109,10 +116,10 @@ export function Controls({
                   aria-pressed={mode === m}
                   aria-label={`Modo ${m} ${m === 1 ? "palabra" : "palabras"}`}
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center text-xs font-bold transition-colors",
+                    "flex h-10 w-10 items-center justify-center text-xs font-bold transition-colors",
                     mode === m
-                      ? "bg-[#2563eb] text-white"
-                      : "text-[#434655] hover:bg-[#e2e7ff]"
+                      ? "bg-primary-bright text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent"
                   )}
                 >
                   {m}
@@ -122,7 +129,7 @@ export function Controls({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-[#434655]">
+            <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               ORP
             </span>
             <button
@@ -131,12 +138,12 @@ export function Controls({
               aria-label="Alternar punto óptimo de reconocimiento"
               className={cn(
                 "relative h-5 w-10 rounded-full transition-colors",
-                orpEnabled ? "bg-[#2563eb]" : "bg-[#c3c6d7]"
+                orpEnabled ? "bg-primary-bright" : "bg-border"
               )}
             >
               <span
                 className={cn(
-                  "absolute top-1 h-3 w-3 rounded-full bg-white transition-all",
+                  "absolute top-1 h-3 w-3 rounded-full bg-card transition-all",
                   orpEnabled ? "right-1" : "left-1"
                 )}
               />
@@ -166,7 +173,7 @@ export function Controls({
           <button
             onClick={onToggle}
             aria-label={isPlaying ? "Pausar" : "Reproducir"}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2563eb] text-white shadow-lg shadow-[#2563eb]/20 transition-all hover:bg-[#004ac6] active:scale-95"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-bright text-primary-foreground shadow-lg shadow-primary-bright/20 transition-all hover:bg-primary active:scale-95"
           >
             {isPlaying ? (
               <Pause className="!size-8" fill="currentColor" />
@@ -184,20 +191,20 @@ export function Controls({
 
         {/* WPM stepper */}
         <div className="order-1 flex justify-center md:order-2">
-          <div className="flex items-center gap-4 rounded-2xl border border-[#c3c6d7]/40 bg-[#f2f3ff] px-6 py-2">
+          <div className="flex items-center gap-4 rounded-2xl border border-border/40 bg-muted px-6 py-2">
             <button
               onClick={decSpeed}
               disabled={speedIdx <= 0}
               aria-label="Reducir velocidad"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#737686] text-[#434655] transition-colors hover:bg-[#faf8ff] active:scale-90 disabled:opacity-30"
+              className="flex size-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-card active:scale-90 disabled:opacity-30"
             >
               <Minus className="size-4" />
             </button>
             <div className="flex min-w-[80px] flex-col items-center">
-              <span className="text-2xl font-bold leading-none text-[#004ac6]">
+              <span className="text-2xl font-bold leading-none text-primary">
                 {speed}
               </span>
-              <span className="text-[10px] font-bold uppercase text-[#434655]">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground">
                 PPM
               </span>
             </div>
@@ -205,7 +212,7 @@ export function Controls({
               onClick={incSpeed}
               disabled={speedIdx >= SPEED_OPTIONS.length - 1}
               aria-label="Aumentar velocidad"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-[#737686] text-[#434655] transition-colors hover:bg-[#faf8ff] active:scale-90 disabled:opacity-30"
+              className="flex size-11 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-card active:scale-90 disabled:opacity-30"
             >
               <Plus className="size-4" />
             </button>
@@ -217,4 +224,4 @@ export function Controls({
       </div>
     </div>
   );
-}
+});

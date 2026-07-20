@@ -30,7 +30,7 @@ export default function StudyPage() {
       <AppNav />
       <main className="mx-auto max-w-3xl px-4 py-8 pb-24 md:pb-8">
         <div className="mb-6">
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <h1 className="font-display flex items-center gap-2 text-2xl font-bold">
             <BookMarked className="size-6 text-primary" />
             Estudiar
           </h1>
