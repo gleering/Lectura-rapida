@@ -202,7 +202,7 @@ export function PacerReader({
 
   return (
     <div
-      className="relative flex h-screen w-screen flex-col overflow-hidden"
+      className="relative flex h-dvh w-screen flex-col overflow-hidden"
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar */}

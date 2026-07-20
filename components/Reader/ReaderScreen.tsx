@@ -324,7 +324,7 @@ export function ReaderScreen({
   return (
     <div
       ref={stageRef}
-      className="reader-stage relative flex h-screen w-screen flex-col overflow-hidden"
+      className="reader-stage relative flex h-dvh w-screen flex-col overflow-hidden"
       style={{ backgroundColor: settings.backgroundColor }}
     >
       {/* Top bar */}
