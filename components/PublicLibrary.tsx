@@ -20,6 +20,8 @@ import {
 import { listBooks } from "@/lib/storage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Paywall } from "@/components/Paywall";
+import { MEMBERSHIP_ENABLED } from "@/lib/features";
 import { formatNumber } from "@/lib/utils";
 
 /**
@@ -30,7 +32,10 @@ import { formatNumber } from "@/lib/utils";
  */
 export function PublicLibrary({ onImported }: { onImported?: () => void }) {
   const router = useRouter();
-  const { ready, user, isAdmin, configured, signOut } = useAuth();
+  const { ready, user, isAdmin, configured, hasActiveSub, signOut } = useAuth();
+  // Con el paywall desactivado, cualquier usuario logueado accede. Con paywall
+  // activo, hace falta membresía (el admin siempre entra).
+  const canAccess = !MEMBERSHIP_ENABLED || isAdmin || hasActiveSub;
 
   const [books, setBooks] = useState<PublicBook[]>([]);
   const [localIds, setLocalIds] = useState<Set<string>>(new Set());
@@ -39,7 +44,7 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!user || !canAccess) return;
     setLoading(true);
     setError(null);
     try {
@@ -51,11 +56,11 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, canAccess]);
 
   useEffect(() => {
-    if (ready && user) void load();
-  }, [ready, user, load]);
+    if (ready && user && canAccess) void load();
+  }, [ready, user, canAccess, load]);
 
   const importBook = async (book: PublicBook) => {
     setBusyId(book.id);
@@ -110,6 +115,8 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
             </Link>
           </CardContent>
         </Card>
+      ) : !canAccess ? (
+        <Paywall feature="La biblioteca pública" />
       ) : loading ? (
         <p className="text-sm text-muted-foreground">Cargando catálogo…</p>
       ) : error ? (
@@ -127,16 +134,31 @@ export function PublicLibrary({ onImported }: { onImported?: () => void }) {
             return (
               <Card key={b.id}>
                 <CardContent className="flex items-center justify-between gap-4 p-5">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{b.title}</p>
-                    {b.author && (
-                      <p className="truncate text-sm text-muted-foreground">
-                        {b.author}
-                      </p>
+                  <div className="flex min-w-0 items-center gap-4">
+                    {b.cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={b.cover}
+                        alt={`Portada de ${b.title}`}
+                        className="h-20 w-14 shrink-0 rounded object-cover shadow-sm"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded bg-secondary text-muted-foreground">
+                        <Library className="size-6" />
+                      </div>
                     )}
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {formatNumber(b.totalWords)} palabras · {b.totalPages} pág.
-                    </p>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{b.title}</p>
+                      {b.author && (
+                        <p className="truncate text-sm text-muted-foreground">
+                          {b.author}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatNumber(b.totalWords)} palabras · {b.totalPages}{" "}
+                        pág.
+                      </p>
+                    </div>
                   </div>
                   {imported ? (
                     <Link

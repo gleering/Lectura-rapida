@@ -24,10 +24,12 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/library";
+  const next = params.get("next") || "/";
   const { signIn, signUp, configured } = useAuth();
 
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const [mode, setMode] = useState<"in" | "up">(
+    params.get("mode") === "up" ? "up" : "in"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

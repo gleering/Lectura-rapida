@@ -20,12 +20,18 @@ services:
       args:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_LS_CHECKOUT_MONTHLY: ${NEXT_PUBLIC_LS_CHECKOUT_MONTHLY:-}
+        NEXT_PUBLIC_LS_CHECKOUT_YEARLY: ${NEXT_PUBLIC_LS_CHECKOUT_YEARLY:-}
+        NEXT_PUBLIC_MEMBERSHIP_ENABLED: ${NEXT_PUBLIC_MEMBERSHIP_ENABLED:-}
     image: readflow:latest
     container_name: readflow
     restart: unless-stopped
     environment:
       NODE_ENV: production
       GEMINI_API_KEY: ${GEMINI_API_KEY:?Falta GEMINI_API_KEY en el entorno}
+      # Server-only (runtime): membresías. El webhook escribe con service-role.
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      LEMONSQUEEZY_WEBHOOK_SECRET: ${LEMONSQUEEZY_WEBHOOK_SECRET:-}
     networks:
       - dokploy-network
     labels:

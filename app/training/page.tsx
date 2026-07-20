@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Brain, Eye, Zap, BarChart3, Lightbulb, Award, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { Brain, Eye, Zap, BarChart3, Lightbulb, Award, TrendingUp, LogIn, Loader2 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { Paywall } from "@/components/Paywall";
+import { useAuth } from "@/lib/auth";
+import { MEMBERSHIP_ENABLED } from "@/lib/features";
 import { SchulteTableGame } from "@/components/SchulteTable";
 import { NBackTest } from "@/components/NBackTest";
 import { UserProfile } from "@/components/UserProfile";
@@ -23,6 +27,10 @@ import { cn } from "@/lib/utils";
 type TrainingMode = "profile" | "diagnostic" | "plan" | "progress" | "schulte" | "nback" | "routine" | "certificates";
 
 export default function TrainingPage() {
+  const { ready, user, isAdmin, configured, hasActiveSub } = useAuth();
+  const canAccess =
+    !MEMBERSHIP_ENABLED || !configured || isAdmin || hasActiveSub;
+
   const [mode, setMode] = useState<TrainingMode>("profile");
   const [schulteScores, setSchulteScores] = useState<SchulteScore[]>([]);
   const [nbackScores, setNBackScores] = useState<NBackScore[]>([]);
@@ -44,6 +52,44 @@ export default function TrainingPage() {
     setPersonalizedPlan(plan);
     setMode("plan");
   };
+
+  // Gate de membresía: los módulos de rehabilitación son premium. Si Supabase
+  // no está configurado, la app local queda 100% libre.
+  if (configured && !canAccess) {
+    return (
+      <div className="min-h-screen">
+        <AppNav />
+        <main className="mx-auto max-w-2xl px-4 py-10 pb-24 md:pb-10">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Centro de Entrenamiento</h1>
+            <p className="text-muted-foreground">
+              Ejercicios científicos para expandir tu visión y mejorar memoria
+            </p>
+          </div>
+          {!ready ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !user ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
+                <Brain className="size-8" />
+                <p>Inicia sesión para acceder a los módulos de entrenamiento.</p>
+                <Link
+                  href="/login?next=/training"
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <LogIn className="size-4" /> Iniciar sesión
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <Paywall feature="El centro de entrenamiento" />
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

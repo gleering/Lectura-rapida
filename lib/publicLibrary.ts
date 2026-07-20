@@ -20,6 +20,7 @@ export interface PublicBook {
   totalPages: number;
   wordsPerPage: number;
   summary: string | null;
+  cover: string | null;
   contentPath: string;
   createdAt: string;
 }
@@ -40,6 +41,7 @@ interface PublicBookRow {
   total_pages: number;
   words_per_page: number;
   summary: string | null;
+  cover: string | null;
   content_path: string;
   created_at: string;
 }
@@ -53,6 +55,7 @@ function rowToBook(r: PublicBookRow): PublicBook {
     totalPages: r.total_pages,
     wordsPerPage: Number(r.words_per_page),
     summary: r.summary,
+    cover: r.cover,
     contentPath: r.content_path,
     createdAt: r.created_at,
   };
@@ -63,7 +66,7 @@ export async function listPublicBooks(): Promise<PublicBook[]> {
   const { data, error } = await getSupabase()
     .from("public_books")
     .select(
-      "id,title,author,total_words,total_pages,words_per_page,summary,content_path,created_at"
+      "id,title,author,total_words,total_pages,words_per_page,summary,cover,content_path,created_at"
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -101,6 +104,7 @@ export async function importToDevice(book: PublicBook): Promise<string> {
     finished: false,
     wordsPerPage: book.wordsPerPage,
     summary: book.summary ?? undefined,
+    cover: book.cover ?? undefined,
   };
   await saveBook(
     meta,
@@ -123,6 +127,7 @@ export async function uploadPublicBook(input: {
   totalPages: number;
   wordsPerPage: number;
   summary?: string;
+  cover?: string;
   content: PublicBookContent;
 }): Promise<void> {
   const supabase = getSupabase();
@@ -149,6 +154,7 @@ export async function uploadPublicBook(input: {
     total_pages: input.totalPages,
     words_per_page: input.wordsPerPage,
     summary: input.summary ?? null,
+    cover: input.cover ?? null,
     content_path: path,
     created_by: user.id,
   });

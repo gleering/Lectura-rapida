@@ -17,6 +17,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getMySubscription, type Subscription } from "@/lib/subscription";
 
 interface AuthState {
   ready: boolean;
@@ -26,6 +27,12 @@ interface AuthState {
   role: string | null;
   isAdmin: boolean;
   configured: boolean;
+  /** Membresía activa del usuario, o null. */
+  subscription: Subscription | null;
+  /** Atajo: ¿tiene acceso premium (biblioteca pública + módulos)? */
+  hasActiveSub: boolean;
+  /** Vuelve a leer la membresía (p. ej. al volver del checkout). */
+  refreshSubscription: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -37,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const loadRole = useCallback(async (userId: string | undefined) => {
     if (!userId) {
@@ -55,6 +63,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const loadSubscription = useCallback(async (userId: string | undefined) => {
+    if (!userId) {
+      setSubscription(null);
+      return;
+    }
+    try {
+      setSubscription(await getMySubscription());
+    } catch {
+      setSubscription(null);
+    }
+  }, []);
+
+  const refreshSubscription = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    const { data } = await getSupabase().auth.getUser();
+    await loadSubscription(data.user?.id);
+  }, [loadSubscription]);
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     const supabase = getSupabase();
@@ -63,19 +89,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
-      void loadRole(data.session?.user?.id).finally(() => setReady(true));
+      const uid = data.session?.user?.id;
+      void Promise.all([loadRole(uid), loadSubscription(uid)]).finally(() =>
+        setReady(true)
+      );
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       void loadRole(s?.user?.id);
+      void loadSubscription(s?.user?.id);
     });
 
     return () => {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, [loadRole]);
+  }, [loadRole, loadSubscription]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await getSupabase().auth.signInWithPassword({
@@ -101,6 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role,
     isAdmin: role === "admin",
     configured: isSupabaseConfigured,
+    subscription,
+    hasActiveSub: subscription != null,
+    refreshSubscription,
     signIn,
     signUp,
     signOut,

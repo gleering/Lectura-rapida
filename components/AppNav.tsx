@@ -16,10 +16,12 @@ import {
   Network,
   BookMarked,
   TrendingUp,
+  Sparkles,
   MoreHorizontal,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MEMBERSHIP_ENABLED } from "@/lib/features";
 
 const links = [
   { href: "/", label: "Inicio", icon: Home },
@@ -30,6 +32,10 @@ const links = [
   { href: "/connections", label: "Conexiones", icon: Network },
   { href: "/progress", label: "Progreso", icon: TrendingUp },
   { href: "/training", label: "Entrenamiento", icon: Brain },
+  // El enlace a la membresía solo aparece cuando el paywall está activo.
+  ...(MEMBERSHIP_ENABLED
+    ? [{ href: "/pricing", label: "Membresía", icon: Sparkles }]
+    : []),
   { href: "/stats", label: "Estadísticas", icon: BarChart3 },
   { href: "/settings", label: "Ajustes", icon: Settings },
 ];

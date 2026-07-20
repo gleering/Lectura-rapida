@@ -12,8 +12,11 @@ import {
   CheckCircle2,
   Repeat,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
+import { Landing } from "@/components/Landing";
+import { useAuth } from "@/lib/auth";
 import { UploadButton } from "@/components/UploadButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +34,7 @@ import { formatNumber, cn } from "@/lib/utils";
 import type { BookMeta, LearningMetrics, DailyLearningGoal } from "@/types";
 
 export default function HomePage() {
+  const { ready, user, configured } = useAuth();
   const [books, setBooks] = useState<BookMeta[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [metrics, setMetrics] = useState<LearningMetrics | null>(null);
@@ -47,6 +51,20 @@ export default function HomePage() {
       }
     );
   }, []);
+
+  // Modelo cliente-final: si hay auth configurada y el visitante no inició
+  // sesión, ve la landing (propuesta de valor + registro). Los usuarios
+  // logueados —y los builds locales sin Supabase— entran directo a la app.
+  if (configured && !ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  if (configured && !user) {
+    return <Landing />;
+  }
 
   const continueBook = books.find(
     (b) => !b.finished && b.progressIndex > 0

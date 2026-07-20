@@ -75,10 +75,14 @@ create table if not exists public.public_books (
   total_pages    integer not null default 0,
   words_per_page numeric not null default 0,
   summary        text,
+  cover          text,                    -- miniatura de portada (dataURL JPEG)
   content_path   text not null,          -- ruta del JSON en el bucket
   created_by     uuid references auth.users (id),
   created_at     timestamptz not null default now()
 );
+
+-- Portada: idempotente para tablas creadas antes de agregar la columna.
+alter table public.public_books add column if not exists cover text;
 
 alter table public.public_books enable row level security;
 
@@ -142,7 +146,76 @@ create policy "public_books_content_delete"
   using (bucket_id = 'public-books' and public.is_admin());
 
 -- ---------------------------------------------------------------------------
--- 4. Hacerte admin (corré esto DESPUÉS de registrarte una vez en la app):
+-- 4. subscriptions: membresías (pagas vía Lemon Squeezy o comps del admin).
+-- ---------------------------------------------------------------------------
+-- Se indexa por EMAIL (en minúsculas) en vez de user_id: así el admin puede
+-- regalar una membresía a un correo AUNQUE esa persona todavía no se haya
+-- registrado. Cuando entra con ese email, ve su acceso activo.
+--
+--   plan    → 'monthly' | 'yearly' | 'comp'
+--   status  → 'active' | 'on_trial' | 'cancelled' | 'expired' | 'past_due' | 'paused'
+--   source  → 'paid' (Lemon Squeezy) | 'comp' (regalo del admin)
+--   current_period_end → null = sin vencimiento (típico de comp)
+create table if not exists public.subscriptions (
+  id                 uuid primary key default gen_random_uuid(),
+  email              text not null,
+  plan               text not null,
+  status             text not null default 'active',
+  source             text not null default 'paid',
+  current_period_end timestamptz,
+  ls_subscription_id text,                          -- id de Lemon Squeezy (paid)
+  created_by         uuid references auth.users (id),
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+
+-- Email siempre en minúsculas para que el match sea consistente.
+create unique index if not exists subscriptions_ls_id_key
+  on public.subscriptions (ls_subscription_id)
+  where ls_subscription_id is not null;
+create index if not exists subscriptions_email_idx
+  on public.subscriptions (lower(email));
+
+alter table public.subscriptions enable row level security;
+
+-- Lectura: cada usuario ve las membresías de SU email; el admin ve todas.
+drop policy if exists "subscriptions_select_own" on public.subscriptions;
+create policy "subscriptions_select_own"
+  on public.subscriptions for select
+  to authenticated
+  using (
+    lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    or public.is_admin()
+  );
+
+-- Escritura desde la app: solo admin (regala/gestiona comps). El webhook de
+-- Lemon Squeezy escribe con la service_role key, que saltea RLS.
+drop policy if exists "subscriptions_admin_all" on public.subscriptions;
+create policy "subscriptions_admin_all"
+  on public.subscriptions for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- ¿El usuario actual tiene una membresía activa? SECURITY DEFINER para leer la
+-- tabla sin chocar con RLS. Considera activa: comp sin vencer, o paga vigente.
+create or replace function public.has_active_subscription()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.subscriptions s
+    where lower(s.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and s.status in ('active', 'on_trial')
+      and (s.current_period_end is null or s.current_period_end > now())
+  );
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 5. Hacerte admin (corré esto DESPUÉS de registrarte una vez en la app):
 --
 --   update public.profiles set role = 'admin'
 --   where email = 'TU-EMAIL@ejemplo.com';
