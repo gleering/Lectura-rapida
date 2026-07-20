@@ -12,7 +12,16 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# La clave NUNCA se hornea en la imagen; se inyecta en runtime como env var.
+# La clave de Gemini NUNCA se hornea (es server-only, se inyecta en runtime).
+# En cambio, las vars NEXT_PUBLIC_* de Supabase SÍ se inlinean en el bundle del
+# cliente en tiempo de build, así que deben estar disponibles acá. La anon key
+# es pública por diseño (el acceso lo restringe RLS). Dokploy debe pasarlas como
+# build args; si faltan, la biblioteca pública se oculta y la app local sigue
+# funcionando igual.
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

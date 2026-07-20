@@ -14,6 +14,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Vars NEXT_PUBLIC_* de Supabase: se necesitan en BUILD (se inlinean en el
+      # cliente). Vienen del entorno del shell / .env del VPS. Si faltan, la
+      # biblioteca pública se oculta y la app local sigue funcionando.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     image: readflow:latest
     container_name: readflow
     restart: unless-stopped

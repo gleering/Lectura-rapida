@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, Play, BookOpen, Loader2 } from "lucide-react";
 import { AppNav } from "@/components/AppNav";
 import { UploadButton } from "@/components/UploadButton";
+import { PublicLibrary } from "@/components/PublicLibrary";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { listBooks, deleteBook, getSummary } from "@/lib/storage";
@@ -67,8 +68,10 @@ export default function LibraryPage() {
     <div className="min-h-screen">
       <AppNav />
       <main className="mx-auto max-w-5xl px-4 py-8 pb-24 md:pb-8">
+        <PublicLibrary onImported={refresh} />
+
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Biblioteca</h1>
+          <h1 className="text-2xl font-bold">Mis libros</h1>
           <UploadButton label="Subir PDF" size="default" />
         </div>
 
