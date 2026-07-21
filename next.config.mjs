@@ -11,6 +11,24 @@ const nextConfig = {
     };
     return config;
   },
+  // El service worker NUNCA debe cachearse en HTTP: el navegador tiene que
+  // revalidarlo en cada visita para detectar despliegues nuevos al instante.
+  // Sin esto, un sw.js viejo cacheado retrasa las actualizaciones hasta 24 h y
+  // el usuario queda "pegado" en una versión antigua.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

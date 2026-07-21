@@ -400,12 +400,16 @@ export function ReaderScreen({
           el botón de play fuera de la pantalla); overflow-hidden recorta el
           sobrante sin invadir los controles. */}
       <div
-        className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
+        className="reader-canvas relative flex min-h-0 flex-1 flex-col overflow-hidden"
         style={{ justifyContent: "flex-start" }}
       >
         <div
           className="flex w-full flex-1 items-start justify-center px-4"
-          style={{ paddingTop: `${settings.verticalPosition}vh` }}
+          // cqh (container query height) = % del alto del ESCENARIO, no del
+          // viewport. Con `vh` la palabra se empujaba fuera del área visible en
+          // móvil (donde el escenario es mucho más bajo que la pantalla) y
+          // overflow-hidden la recortaba: por eso "no se veían" las palabras.
+          style={{ paddingTop: `${settings.verticalPosition}cqh` }}
         >
           <button
             onClick={engine.toggle}

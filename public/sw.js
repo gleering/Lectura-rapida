@@ -1,5 +1,8 @@
 // Service worker de ReadFlow — cache básico para instalación y uso offline.
-const CACHE = "readflow-v3";
+// Al subir esta versión, `activate` borra las cachés viejas y (por skipWaiting +
+// clients.claim + la recarga automática del cliente) el usuario pasa a la
+// versión nueva sin tener que borrar caché a mano.
+const CACHE = "readflow-v4";
 const OFFLINE_URLS = ["/", "/library", "/review", "/progress"];
 
 self.addEventListener("install", (event) => {
@@ -41,13 +44,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Estáticos: cache primero, red como respaldo.
+  // Estáticos con hash de contenido (/_next/static/…) e íconos: cache primero.
+  // Es seguro porque cada build genera nombres de archivo nuevos, así que un
+  // deploy nunca queda "tapado" por una versión vieja en caché — simplemente se
+  // piden las URLs nuevas. El resto (incluido /_next/data) va a la red.
+  const isImmutable =
+    url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icon");
+  if (!isImmutable) return;
+
   event.respondWith(
     caches.match(request).then(
       (cached) =>
         cached ||
         fetch(request).then((res) => {
-          if (res.ok && (url.pathname.startsWith("/_next/") || url.pathname.startsWith("/icon"))) {
+          if (res.ok) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(request, copy));
           }

@@ -107,6 +107,14 @@
   will-change: contents;
 }
 
+/* El escenario de lectura es un contenedor de tamaño: permite que la posición
+   vertical de la palabra se exprese en cqh (% del alto del escenario) en vez de
+   vh (% del viewport), para que quede centrada tanto en desktop como en móvil,
+   donde el escenario es mucho más bajo que la pantalla. */
+.reader-canvas {
+  container-type: size;
+}
+
 /* Hide scrollbars inside the reader for a distraction-free surface. */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
