@@ -103,13 +103,18 @@ export default function ReaderPage() {
 
   return (
     <>
-      <ReaderContainer
-        key={`${meta.id}-${startIndex}`}
-        meta={{ ...meta, progressIndex: startIndex }}
-        words={words}
-        paraStarts={paraStarts}
-        sections={sections}
-      />
+      {/* Mientras el diálogo de reanudar está abierto no montamos el lector: así
+          sus atajos de teclado (Espacio, flechas) no actúan por detrás del
+          diálogo. Al elegir, el lector arranca ya en la posición correcta. */}
+      {!askResume && (
+        <ReaderContainer
+          key={`${meta.id}-${startIndex}`}
+          meta={{ ...meta, progressIndex: startIndex }}
+          words={words}
+          paraStarts={paraStarts}
+          sections={sections}
+        />
+      )}
 
       <Dialog open={askResume} dismissible={false}>
         <div className="space-y-4 text-center">

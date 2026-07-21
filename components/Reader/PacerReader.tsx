@@ -205,8 +205,10 @@ export function PacerReader({
       className="relative flex h-dvh w-screen flex-col overflow-hidden"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      {/* Top bar */}
-      <div className="safe-top safe-x flex items-center justify-between pb-3">
+      {/* Top bar — superficie sólida translúcida para que los controles se lean
+          sobre cualquier color de fondo (antes usaba mix-blend-difference, que
+          quedaba con bajo contraste sobre fondos de tono medio). */}
+      <div className="safe-top safe-x flex items-center justify-between bg-black/60 pb-3 backdrop-blur">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -215,7 +217,7 @@ export function PacerReader({
               void engine.flush();
               router.push("/");
             }}
-            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
+            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Volver"
           >
             <ArrowLeft />
@@ -233,7 +235,7 @@ export function PacerReader({
         </div>
         <button
           onClick={openSummary}
-          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white mix-blend-difference"
+          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
         >
           <Sparkles className="size-4" /> Resumen
         </button>
@@ -242,11 +244,19 @@ export function PacerReader({
       {/* Escenario: bloque quieto, realce que barre. */}
       <div
         ref={stageRef}
-        className="flex flex-1 items-center justify-center overflow-hidden px-6 sm:px-10"
+        className="relative flex flex-1 items-center justify-center overflow-hidden px-6 sm:px-10"
       >
+        {/* Toca el texto para pausar/reanudar (mismo gesto que en RSVP). El
+            botón cubre el escenario por detrás del texto. */}
+        <button
+          type="button"
+          onClick={engine.toggle}
+          aria-label={engine.isPlaying ? "Pausar lectura" : "Reproducir lectura"}
+          className="absolute inset-0 z-0 cursor-pointer"
+        />
         <p
           ref={blockRef}
-          className="w-full max-w-2xl select-none text-left"
+          className="pointer-events-none relative z-10 w-full max-w-2xl select-none text-left"
           style={{
             fontFamily: settings.fontFamily,
             fontSize: `${fitFont}px`,

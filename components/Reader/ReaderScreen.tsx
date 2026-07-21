@@ -9,6 +9,7 @@ import {
   Loader2,
   Brain,
   Check,
+  BookText,
 } from "lucide-react";
 import { useReaderEngine } from "@/hooks/useReaderEngine";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -407,10 +408,10 @@ export function ReaderScreen({
           style={{ paddingTop: `${settings.verticalPosition}vh` }}
         >
           <button
-            onClick={openDictionary}
+            onClick={engine.toggle}
             className="w-full max-w-4xl cursor-pointer select-none"
-            aria-label="Ver definición de la palabra"
-            title="Toca para ver la definición"
+            aria-label={engine.isPlaying ? "Pausar lectura" : "Reproducir lectura"}
+            title="Toca para pausar o reanudar"
           >
             {/* ORP guide line */}
             {settings.orpEnabled && (
@@ -426,6 +427,21 @@ export function ReaderScreen({
             )}
           </button>
         </div>
+
+        {/* Definir la palabra actual — solo al pausar. Antes el toque sobre la
+            palabra abría el diccionario; ahora el toque pausa y el diccionario
+            vive en este botón explícito. */}
+        {!engine.isPlaying && !finished && engine.index > 0 && engine.chunk.pivotWord && (
+          <div className="flex justify-center px-8 pb-2">
+            <button
+              onClick={openDictionary}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-4 py-1.5 text-sm text-primary shadow-sm transition-colors hover:bg-secondary"
+            >
+              <BookText className="size-4" />
+              Definir «{engine.chunk.pivotWord}»
+            </button>
+          </div>
+        )}
 
         {/* Oración de contexto al pausar: re-ancla antes de reanudar. */}
         {pauseContext && (

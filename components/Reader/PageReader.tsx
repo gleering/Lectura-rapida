@@ -234,8 +234,10 @@ export function PageReader({
       className="relative flex h-dvh w-screen flex-col overflow-hidden"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      {/* Top bar */}
-      <div className="safe-top safe-x flex items-center justify-between pb-3">
+      {/* Top bar — superficie sólida translúcida para que los controles se lean
+          sobre cualquier color de fondo (antes usaba mix-blend-difference, que
+          quedaba con bajo contraste sobre fondos de tono medio). */}
+      <div className="safe-top safe-x flex items-center justify-between bg-black/60 pb-3 backdrop-blur">
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -244,7 +246,7 @@ export function PageReader({
               void flush();
               router.push("/");
             }}
-            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
+            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Volver"
           >
             <ArrowLeft />
@@ -265,7 +267,7 @@ export function PageReader({
           <Button
             variant="ghost"
             size="icon"
-            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
+            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white"
             onClick={() => update({ fontSize: Math.max(32, settings.fontSize - 6) })}
             aria-label="Reducir letra"
           >
@@ -274,7 +276,7 @@ export function PageReader({
           <Button
             variant="ghost"
             size="icon"
-            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white mix-blend-difference"
+            className="bg-transparent text-white/70 hover:bg-white/10 hover:text-white"
             onClick={() => update({ fontSize: Math.min(96, settings.fontSize + 6) })}
             aria-label="Aumentar letra"
           >
@@ -284,7 +286,7 @@ export function PageReader({
           <button
             onClick={() => update({ bionicEnabled: !settings.bionicEnabled })}
             className={cn(
-              "flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors mix-blend-difference",
+              "flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors",
               settings.bionicEnabled
                 ? "bg-white/15 text-white"
                 : "text-white/60 hover:bg-white/10 hover:text-white"
@@ -296,7 +298,7 @@ export function PageReader({
           </button>
           <button
             onClick={openSummary}
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white mix-blend-difference"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white"
           >
             <Sparkles className="size-4" /> Resumen
           </button>

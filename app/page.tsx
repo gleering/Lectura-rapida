@@ -71,6 +71,12 @@ export default function HomePage() {
   }
 
   const continueBook = books.find((b) => !b.finished && b.progressIndex > 0);
+  const continuePct = continueBook
+    ? Math.min(
+        100,
+        ((continueBook.progressIndex + 1) / continueBook.totalWords) * 100
+      )
+    : 0;
   const recent = books.slice(0, 8);
   const hasLearning = metrics && metrics.totalConcepts > 0;
 
@@ -269,25 +275,12 @@ export default function HomePage() {
                       <div className="mt-6">
                         <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-tight text-muted-foreground">
                           <span>Progreso de lectura</span>
-                          <span>
-                            {(
-                              ((continueBook.progressIndex + 1) /
-                                continueBook.totalWords) *
-                              100
-                            ).toFixed(0)}
-                            %
-                          </span>
+                          <span>{continuePct.toFixed(0)}%</span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-accent">
                           <div
                             className="h-full rounded-full bg-primary"
-                            style={{
-                              width: `${
-                                ((continueBook.progressIndex + 1) /
-                                  continueBook.totalWords) *
-                                100
-                              }%`,
-                            }}
+                            style={{ width: `${continuePct}%` }}
                           />
                         </div>
                       </div>
@@ -339,7 +332,7 @@ export default function HomePage() {
               {recent.map((b) => {
                 const pct =
                   b.totalWords > 0
-                    ? ((b.progressIndex + 1) / b.totalWords) * 100
+                    ? Math.min(100, ((b.progressIndex + 1) / b.totalWords) * 100)
                     : 0;
                 return (
                   <Link key={b.id} href={`/reader/${b.id}`} className="group space-y-3">

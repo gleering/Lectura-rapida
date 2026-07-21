@@ -18,6 +18,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getMySubscription, type Subscription } from "@/lib/subscription";
+import { MEMBERSHIP_ENABLED } from "@/lib/features";
 
 interface AuthState {
   ready: boolean;
@@ -64,7 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadSubscription = useCallback(async (userId: string | undefined) => {
-    if (!userId) {
+    // Con las membresías desactivadas nadie consulta `hasActiveSub` (el paywall
+    // hace short-circuit con !MEMBERSHIP_ENABLED), así que evitamos una query a
+    // `subscriptions` en cada login.
+    if (!MEMBERSHIP_ENABLED || !userId) {
       setSubscription(null);
       return;
     }
@@ -76,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshSubscription = useCallback(async () => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || !MEMBERSHIP_ENABLED) return;
     const { data } = await getSupabase().auth.getUser();
     await loadSubscription(data.user?.id);
   }, [loadSubscription]);
