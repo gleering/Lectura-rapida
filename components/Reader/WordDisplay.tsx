@@ -25,22 +25,27 @@ export const WordDisplay = React.memo(function WordDisplay({
   pivotWord,
   settings,
 }: WordDisplayProps) {
+  const isMultiWord = chunkText.includes(" ");
+
   const style: React.CSSProperties = {
     fontFamily: settings.fontFamily,
     // La fuente elegida por el usuario, pero acotada al ancho del viewport para
     // que una palabra larga nunca se salga ni se recorte en pantallas chicas.
-    fontSize: `min(${settings.fontSize}px, 13vw)`,
+    // Los chunks de 2–3 palabras necesitan un tope más bajo porque ocupan más
+    // ancho; si no, se parten en dos líneas y generan saltos verticales.
+    fontSize: `min(${settings.fontSize}px, ${isMultiWord ? "8vw" : "12vw"})`,
     color: settings.textColor,
     letterSpacing: `${settings.letterSpacing}em`,
     lineHeight: 1.1,
     fontWeight: 600,
   };
 
-  const isMultiWord = chunkText.includes(" ");
-
   if (!settings.orpEnabled || isMultiWord) {
     return (
-      <div className="text-center" style={style}>
+      <div
+        className="mx-auto max-w-full overflow-hidden whitespace-nowrap text-center"
+        style={style}
+      >
         {isMultiWord
           ? chunkText.split(" ").map((w, i) => {
               const { head, tail } = bionicSplit(w);
@@ -64,8 +69,15 @@ export const WordDisplay = React.memo(function WordDisplay({
       className="relative flex w-full items-baseline justify-center"
       style={style}
     >
-      {/* Mitad izquierda — termina exactamente en el centro. */}
-      <span className="flex-1 whitespace-pre text-right" style={{ opacity: 0.85 }}>
+      {/* Mitad izquierda — termina exactamente en el centro.
+          min-w-0 es clave: sin él, flex-1 no puede encogerse por debajo del
+          ancho de su texto (min-width:auto), así que en una palabra larga la
+          mitad más ancha empuja el pivote fuera del centro. Con min-w-0 ambas
+          mitades valen exactamente la mitad y el desborde queda simétrico. */}
+      <span
+        className="min-w-0 flex-1 whitespace-pre text-right"
+        style={{ opacity: 0.85 }}
+      >
         {before}
       </span>
 
@@ -82,7 +94,10 @@ export const WordDisplay = React.memo(function WordDisplay({
       </span>
 
       {/* Mitad derecha. */}
-      <span className="flex-1 whitespace-pre text-left" style={{ opacity: 0.85 }}>
+      <span
+        className="min-w-0 flex-1 whitespace-pre text-left"
+        style={{ opacity: 0.85 }}
+      >
         {after}
       </span>
     </div>

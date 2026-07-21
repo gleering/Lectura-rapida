@@ -76,9 +76,9 @@ export const Controls = React.memo(function Controls({
     "flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary-bright active:scale-90";
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3 sm:gap-5">
       {/* Method tabs + toggles row */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         {/* Method selector tabs */}
         <div className="flex rounded-lg bg-secondary p-1" role="radiogroup" aria-label="Estilo de lectura">
           {METHOD_TABS.map((m) => {
@@ -90,7 +90,7 @@ export const Controls = React.memo(function Controls({
                 aria-checked={on}
                 onClick={() => onMethod(m.id)}
                 className={cn(
-                  "rounded-md px-4 py-2 text-sm transition-all",
+                  "rounded-md px-3 py-2 text-sm transition-all sm:px-4",
                   on
                     ? "bg-card font-bold text-primary shadow-sm"
                     : "font-medium text-muted-foreground hover:text-foreground"
@@ -103,7 +103,7 @@ export const Controls = React.memo(function Controls({
         </div>
 
         {/* Toggles: VISTA (mode) + ORP switch + fullscreen */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Vista
@@ -161,7 +161,7 @@ export const Controls = React.memo(function Controls({
       </div>
 
       {/* Transport + WPM stepper */}
-      <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-3 md:gap-5">
         {/* Transport */}
         <div className="order-2 flex items-center justify-center gap-3 md:order-1 md:justify-start sm:gap-4">
           <button className={transportBtn} onClick={onStart} aria-label="Ir al inicio">
