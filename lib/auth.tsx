@@ -81,8 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSubscription = useCallback(async () => {
     if (!isSupabaseConfigured || !MEMBERSHIP_ENABLED) return;
-    const { data } = await getSupabase().auth.getUser();
-    await loadSubscription(data.user?.id);
+    try {
+      const { data } = await getSupabase().auth.getUser();
+      await loadSubscription(data.user?.id);
+    } catch {
+      // Si falla, mantenemos la suscripción actual en lugar de lanzar.
+    }
   }, [loadSubscription]);
 
   useEffect(() => {
@@ -90,14 +94,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabase();
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      const uid = data.session?.user?.id;
-      void Promise.all([loadRole(uid), loadSubscription(uid)]).finally(() =>
-        setReady(true)
-      );
-    });
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        const uid = data.session?.user?.id;
+        void Promise.all([loadRole(uid), loadSubscription(uid)]).finally(() => {
+          if (active) setReady(true);
+        });
+      })
+      .catch(() => {
+        // Si Supabase no responde (red caída, servicio no disponible), desbloqueamos
+        // la app con estado de sesión vacío en lugar de quedar en spinner infinito.
+        if (active) setReady(true);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);

@@ -45,15 +45,18 @@ export default function HomePage() {
   const [goals, setGoals] = useState<DailyLearningGoal[]>([]);
 
   useEffect(() => {
-    Promise.all([listBooks(), getAllReviewCards(), getAllConceptLinks()]).then(
-      ([b, cards, links]) => {
+    Promise.all([listBooks(), getAllReviewCards(), getAllConceptLinks()])
+      .then(([b, cards, links]) => {
         setBooks(b);
         const m = computeLearningMetrics(cards, links);
         setMetrics(m);
         setGoals(computeDailyGoals(cards, m));
-        setLoaded(true);
-      }
-    );
+      })
+      .catch(() => {
+        // Si IndexedDB no está disponible (modo privado, cuota llena…)
+        // igual mostramos la app vacía en lugar de quedar cargando para siempre.
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   // Modelo cliente-final: si hay auth configurada y el visitante no inició

@@ -17,6 +17,7 @@ const nextConfig = {
   // el usuario queda "pegado" en una versión antigua.
   async headers() {
     return [
+      // El service worker NUNCA debe cachearse en HTTP.
       {
         source: "/sw.js",
         headers: [
@@ -25,6 +26,23 @@ const nextConfig = {
             value: "no-cache, no-store, must-revalidate",
           },
           { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      // Security headers globales para todas las rutas.
+      {
+        source: "/:path*",
+        headers: [
+          // Evita que la app se cargue en un <iframe> (clickjacking).
+          { key: "X-Frame-Options", value: "DENY" },
+          // Evita MIME-type sniffing.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // No enviar Referer a sitios externos.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Permisos de APIs del navegador (cámara/mic no usados, geolocation no).
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
         ],
       },
     ];

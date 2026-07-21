@@ -54,10 +54,14 @@ export default function LibraryPage() {
   const [pendingDelete, setPendingDelete] = useState<BookMeta | null>(null);
 
   const refresh = () =>
-    listBooks().then((b) => {
-      setBooks(b as BookWithSummary[]);
-      setLoaded(true);
-    });
+    listBooks()
+      .then((b) => {
+        setBooks(b as BookWithSummary[]);
+      })
+      .catch(() => {
+        // IndexedDB no disponible: mostramos la página vacía.
+      })
+      .finally(() => setLoaded(true));
 
   useEffect(() => {
     refresh();
@@ -66,10 +70,14 @@ export default function LibraryPage() {
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     const title = pendingDelete.title;
-    await deleteBook(pendingDelete.id);
-    setPendingDelete(null);
-    await refresh();
-    toast.success(`“${title}” se eliminó de tu biblioteca.`);
+    try {
+      await deleteBook(pendingDelete.id);
+      setPendingDelete(null);
+      await refresh();
+      toast.success(`”${title}” se eliminó de tu biblioteca.`);
+    } catch {
+      toast.error("No se pudo eliminar el libro. Intenta de nuevo.");
+    }
   };
 
   const toggleSummary = async (bookId: string) => {
@@ -86,14 +94,23 @@ export default function LibraryPage() {
         )
       );
 
-      const summary = await getSummary(bookId);
-      setBooks((prevBooks) =>
-        prevBooks.map((b) =>
-          b.id === bookId
-            ? { ...b, summaryText: summary || undefined, loadingSummary: false }
-            : b
-        )
-      );
+      try {
+        const summary = await getSummary(bookId);
+        setBooks((prevBooks) =>
+          prevBooks.map((b) =>
+            b.id === bookId
+              ? { ...b, summaryText: summary || undefined, loadingSummary: false }
+              : b
+          )
+        );
+      } catch {
+        // Si falla, quitamos el spinner para no quedar colgados.
+        setBooks((prevBooks) =>
+          prevBooks.map((b) =>
+            b.id === bookId ? { ...b, loadingSummary: false } : b
+          )
+        );
+      }
     }
 
     setExpandedBook(bookId);
