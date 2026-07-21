@@ -393,9 +393,13 @@ export function ReaderScreen({
         </div>
       </div>
 
-      {/* Reading stage — the flashing word. */}
+      {/* Reading stage — the flashing word.
+          min-h-0 permite que el escenario ceda altura a la barra de controles en
+          viewports bajos (si no, flex-1 conserva su altura de contenido y empuja
+          el botón de play fuera de la pantalla); overflow-hidden recorta el
+          sobrante sin invadir los controles. */}
       <div
-        className="relative flex flex-1 flex-col"
+        className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
         style={{ justifyContent: "flex-start" }}
       >
         <div
